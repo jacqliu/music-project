@@ -291,12 +291,12 @@ class BeatMatchDisplay(InstructionGroup):
         self.add(self.translate)
 
         # make barlines
-        self.barlines_raw = barline_data
-        self.barlines = []
-        for (t) in self.barlines_raw:
-            l = Line(points=[float(t)*time_len+100, 540, float(t)*time_len+100, 570])
-            self.barlines.append(l)
-            self.add(l)
+        # self.barlines_raw = barline_data
+        # self.barlines = []
+        # for (t) in self.barlines_raw:
+        #     l = Line(points=[float(t)*time_len+100, 540, float(t)*time_len+100, 570])
+        #     self.barlines.append(l)
+        #     self.add(l)
 
         # make gems
         self.gems_raw = gem_data
@@ -368,6 +368,12 @@ class TrailDisplay(InstructionGroup):
             shape = self.possible_types_object()
             if shape:
                 self.shapes[shape] += 1
+            print shape
+
+            if shape == 'triangle':
+                self.color.h, self.color.s, self.color.v = (1./3, 1,1)
+            elif shape == 'square':
+                self.color.h, self.color.s, self.color.v = (2./3, 1,1)
 
     def on_miss(self):
         self.color.h, self.color.s, self.color.v = (0, 1, 1)
@@ -381,6 +387,8 @@ class TrailDisplay(InstructionGroup):
             for o in list(self.objects):
                 self.objects.remove(o)
             self.clear()
+            self.color.h, self.color.s, self.color.v = (0, 0, 1)
+            self.add(self.color)
         if abs(self.timer_miss) < 0.01:
             for o in list(self.objects):
                 self.objects.remove(o)
