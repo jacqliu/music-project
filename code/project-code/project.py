@@ -94,7 +94,8 @@ class MainWidget(BaseWidget) :
     def on_update(self) :
         self.info.text = '\n\n\nScore: '+ str(self.player.score)
         self.info.text += '\nStreak: ' + str(self.player.streak)
-        self.info.text += '\nBonus: ' + str(self.player.bonus) + 'x'
+        self.info.text += '\nBonus: ' + str(self.player.bonus) + 'x \n\n'
+        self.info.text += str(self.trail_display)
 
         if not self.paused:
             self.player.on_update()
@@ -344,6 +345,8 @@ class TrailDisplay(InstructionGroup):
         self.color = Color(hsv=(0,0,1))
         self.add(self.color)
 
+        self.shapes = {'triangle': 0, 'square': 0}
+
 
     def on_touch_down(self, pos, push):
         if not push:
@@ -362,11 +365,12 @@ class TrailDisplay(InstructionGroup):
             else:
                 print 'pushed without objects'
 
-            print self.possible_types_object()
+            shape = self.possible_types_object()
+            if shape:
+                self.shapes[shape] += 1
 
     def on_miss(self):
         self.color.h, self.color.s, self.color.v = (0, 1, 1)
-        print 'here'
         self.timer_miss = .2
 
 
@@ -390,6 +394,11 @@ class TrailDisplay(InstructionGroup):
         elif len(self.objects) == 4:
             return 'square'
 
+    def __str__(self):
+        new = ""
+        for key in self.shapes: 
+            new += key + ': ' + str(self.shapes[key]) + '\n'
+        return new
 
 
 # Handles game logic and keeps score.
