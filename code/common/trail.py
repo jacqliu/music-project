@@ -125,17 +125,17 @@ class TrailDisplay(InstructionGroup):
                 p2 = self.objs[1].cpos
                 p3 = self.objs[2].cpos
                 p4 = self.objs[3].cpos
-                if not self.intersect(p1, p2, p3, p4): #and not self.intersect(p3, p4, p1, p2) and not self.intersect(p1, p4, p2, p3) and not self.intersect(p2, p3, p1, p4):
+                #if not self.intersect(p1, p2, p3, p4): #and not self.intersect(p3, p4, p1, p2) and not self.intersect(p1, p4, p2, p3) and not self.intersect(p2, p3, p1, p4):
                 # numer = p1[0]*p2[1] + p2[0]*p3[1] + p3[0]*p4[1] + p4[0]*p1[1] - (p2[0]*p1[1] + p3[0]*p2[1] + p4[0]*p3[1] + p1[0]*p4[1])
                 # area = abs(numer/2.0)
                 # perimeter = pt_distance(p1, p2) + pt_distance(p2, p3) + pt_distance(p3, p4) + pt_distance(p4, p1)
                 # print area/perimeter, area, perimeter
                 # print "here"
-                # if area/perimeter > 10:
-                    if self.on_the_same_axis(p1, p2) and self.on_the_same_axis(p2, p3) and self.on_the_same_axis(p3, p4) and self.on_the_same_axis(p4, p1):
-                        return 'square'
-                    elif self.on_the_same_axis(p1, p3) and self.on_the_same_axis(p2, p4):
-                        return 'diamond'
+            # if area/perimeter > 10:
+                if self.on_the_same_axis(p1, p2) and self.on_the_same_axis(p2, p3) and self.on_the_same_axis(p3, p4) and self.on_the_same_axis(p4, p1):
+                    return 'square'
+                elif self.on_the_same_axis(p1, p3) and self.on_the_same_axis(p2, p4) and not self.on_the_same_axis(p1, p2) and not self.on_the_same_axis(p3, p4):
+                    return 'diamond'
 
 
                 
