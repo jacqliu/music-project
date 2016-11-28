@@ -28,6 +28,9 @@ def topleft_label() :
               text_size=(Window.width, Window.height))
     return l
 
+def pt_distance(p1, p2):
+    return np.linalg.norm(np.array(p1) - np.array(p2))
+
 # Override Ellipse class to add centered functionality.
 # use cpos and csize to set/get the ellipse based on a centered registration point
 # instead of a bottom-left registration point

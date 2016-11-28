@@ -9,6 +9,7 @@ from common.wavegen import *
 from common.wavesrc import *
 from common.gfxutil import *
 from common.note import *
+from common.trail import *
 
 from kivy.graphics.instructions import InstructionGroup
 from kivy.graphics import Color, Ellipse, Line, Rectangle
@@ -21,20 +22,22 @@ import numpy as np
 import bisect
 
 # appropriate files
-mirror_mirror = "../../mirror_mirror.wav"
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
-gems_path = "../../mirror_mirror_gems.txt"
+#wav_file = "../../mirror_mirror.wav"
+wav_file = "../../xion.wav"
+#gems_path = "../../mirror_mirror_gems.txt"
+gems_path = "../../xion.txt"
 barline_path = "../../mirror_mirror_gems.txt"
 
-# some colors
-red = Color(hsv=(0,1,1))
-lime = Color(hsv=(1./3, 1,1))
-blue = Color(hsv=(2./3, 1,1))
-yellow = Color(hsv=(1./6, 1,1))
-cyan = Color(hsv=(.5,1,1))
+# some colors in hsv
+red = (0,1,1)
+lime = (1./3, 1,1)
+blue = (2./3, 1,1)
+yellow = (1./6, 1,1)
+cyan = (.5,1,1)
 colors = [red, lime, blue, yellow, cyan]
-white = Color(hsv=(0,0,1))
+white = (0,0,1)
 
 time_len = 200
 
@@ -46,14 +49,11 @@ class MainWidget(BaseWidget) :
         self.add_widget(self.info)
 
         # audio controller
-        self.audioctrl = AudioController(mirror_mirror)
+        self.audioctrl = AudioController(wav_file)
 
         # keep track of objects
         self.objects = AnimGroup()
         self.canvas.add(self.objects)
-
-        self.trail_display = TrailDisplay()
-        self.objects.add(self.trail_display)
 
         # keep track of song and data
         self.song = SongData()
@@ -64,6 +64,10 @@ class MainWidget(BaseWidget) :
         # particle system
         self.ps = ParticleSystem('particle/particle.pex')
         self.add_widget(self.ps)
+
+        #trail display - must be before beat match display, otherwise will translate.... lol
+        self.trail_display = TrailDisplay()
+        self.objects.add(self.trail_display)
 
         # display
         self.display = BeatMatchDisplay(gem_data, barlines_data, self.ps)
@@ -79,20 +83,24 @@ class MainWidget(BaseWidget) :
         if keycode[1] == 'p':
             self.paused = not self.paused
 
-        if keycode[1] == 'm':
+        elif keycode[1] == 'm':
             self.player.on_button_down(None, True)
 
     def on_touch_down(self, touch):
         self.player.on_button_down(touch.pos, False)
 
+    def on_touch_move(self, touch):
+        self.player.on_trigger_hold(touch.pos)
+
     def on_touch_up(self, touch):
-        self.player.on_button_up()
+        self.player.on_button_up(touch.pos)
 
     def on_key_up(self, keycode):
         pass
         
     def on_update(self) :
         self.info.text = '\n\n\nScore: '+ str(self.player.score)
+        self.info.text += '\nGenerators: ' + str(len(self.objects.objects))
         self.info.text += '\nStreak: ' + str(self.player.streak)
         self.info.text += '\nBonus: ' + str(self.player.bonus) + 'x \n\n'
         self.info.text += str(self.trail_display)
@@ -111,11 +119,8 @@ class AudioController(object):
     def __init__(self, song):
         super(AudioController, self).__init__()
         self.audio = Audio(2)
-
         self.mixer = Mixer()
         self.audio.set_generator(self.mixer)
-
-        # tracks
         self.song = WaveGenerator(WaveFile(song))
 
         self.mixer.add(self.song)
@@ -203,7 +208,7 @@ class GemDisplay(InstructionGroup):
         self.time = 0
 
         self.pos = pos
-        self.color = Color(hsv=color.hsv)
+        self.color = Color(hsv=color)
         self.add(self.color)
         self.gem = CEllipse(cpos = self.pos, size = (23, 23), segments = 40)
         self.add(self.gem)
@@ -223,11 +228,12 @@ class GemDisplay(InstructionGroup):
     def on_pass(self):
         # change color of gem if missed
         self.miss = True
-        self.remove(self.color)
-        self.remove(self.gem)
+        # self.remove(self.color)
+        # self.remove(self.gem)
         new = (self.color.hsv[0], self.color.hsv[1], .5)
-        self.add(Color(hsv=new))
-        self.add(self.gem)
+        self.color.h, self.color.s, self.color.v = new
+        #self.add(Color(hsv=new))
+        #self.add(self.gem)
 
     # useful if gem is to animate
     def on_update(self, dt):
@@ -260,6 +266,28 @@ class ButtonDisplay(InstructionGroup):
     def on_update(self, dt):
         pass
 
+class HealthDisplay(InstructionGroup):
+    def __init__(self):
+        super(HealthDisplay, self).__init__()
+        self.health_left = 100.0
+
+        self.health_bar = Line(points = [0, Window.height, Window.width*self.health_left/100.0, Window.height], width = 30, cap = 'none')
+        self.damage_bar = Line(points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height], width = 30, cap = 'none')
+        self.add(Color(hsv = yellow))
+        self.add(self.health_bar)
+        self.add(Color(hsv = lime))
+        self.add(self.damage_bar)
+
+    def on_hit(self, frac):
+        self.health_left -= 100*frac
+        self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
+        self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
+
+    def on_gain(self, frac):
+        self.health_left += 100*frac
+        self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
+        self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
+
 # Displays all game elements: Nowbar, Buttons, BarLines, Gems.
 # scrolls the gem display.
 # controls the gems and nowbar buttons
@@ -275,16 +303,20 @@ class BeatMatchDisplay(InstructionGroup):
 
         # only 2 lanes
         self.lanes = []
-        for i in range(540, 600, 30):
+        for i in range(Window.height-60, Window.height, 30):
             line = Line(points=[0, i, 800, i])
             self.lanes.append(line)
             self.add(line)
 
-        self.now_bar = Line(points=[100, 540, 100, 570], width=1)
+        self.now_bar = Line(points=[100, Window.height-60, 100, Window.height-30], width=1) #TODO - switch to relative to height of window
         self.add(self.now_bar)
         
         # make button for now bar
         self.button = ButtonDisplay(ps)
+
+        #make health bar
+        self.health = HealthDisplay()
+        self.add(self.health)
 
         # set up translation
         self.translate = Translate()
@@ -336,79 +368,6 @@ class BeatMatchDisplay(InstructionGroup):
         self.translate.x = -self.time*time_len
 
 
-class TrailDisplay(InstructionGroup):
-    def __init__(self):
-        super(TrailDisplay, self).__init__()
-        self.objects = []
-        self.timer_push = -1
-        self.timer_miss = -1
-        self.color = Color(hsv=(0,0,1))
-        self.add(self.color)
-
-        self.shapes = {'triangle': 0, 'square': 0}
-
-
-    def on_touch_down(self, pos, push):
-        if not push:
-            new = CEllipse(cpos = pos, size = (30, 30), segments = 40)
-            self.add(new)
-            self.objects.append(new)
-        else:
-            self.timer_push = .3
-            if self.objects:
-                for i in range(len(self.objects)-1):
-                    pos1 = self.objects[i].cpos
-                    pos2 = self.objects[i+1].cpos
-                    self.add(Line(points=[pos1[0], pos1[1], pos2[0], pos2[1]]))
-                self.add(Line(points=[self.objects[0].cpos[0], self.objects[0].cpos[1], self.objects[-1].cpos[0], self.objects[-1].cpos[1]]))
-
-            else:
-                print 'pushed without objects'
-
-            shape = self.possible_types_object()
-            if shape:
-                self.shapes[shape] += 1
-            print shape
-
-            if shape == 'triangle':
-                self.color.h, self.color.s, self.color.v = (1./3, 1,1)
-            elif shape == 'square':
-                self.color.h, self.color.s, self.color.v = (2./3, 1,1)
-
-    def on_miss(self):
-        self.color.h, self.color.s, self.color.v = (0, 1, 1)
-        self.timer_miss = .2
-
-
-    def on_update(self, dt):
-        self.timer_push -= dt
-        self.timer_miss -= dt
-        if abs(self.timer_push) < 0.01:
-            for o in list(self.objects):
-                self.objects.remove(o)
-            self.clear()
-            self.color.h, self.color.s, self.color.v = (0, 0, 1)
-            self.add(self.color)
-        if abs(self.timer_miss) < 0.01:
-            for o in list(self.objects):
-                self.objects.remove(o)
-            self.clear()
-            self.color.h, self.color.s, self.color.v = (0, 0, 1)
-            self.add(self.color)
-
-    def possible_types_object(self):
-        if len(self.objects) == 3:
-            return 'triangle'
-        elif len(self.objects) == 4:
-            return 'square'
-
-    def __str__(self):
-        new = ""
-        for key in self.shapes: 
-            new += key + ': ' + str(self.shapes[key]) + '\n'
-        return new
-
-
 # Handles game logic and keeps score.
 # Controls the display and the audio
 class Player(object):
@@ -417,6 +376,7 @@ class Player(object):
 
         self.display = display
         self.trail_display = trail_display
+        self.trail_display.callback = self.cast_spell
         self.audio_ctrl = audio_ctrl
 
         self.song = song
@@ -444,7 +404,7 @@ class Player(object):
         for h in hits:
             idx = self.song.get_gem_index(h)
             coords = self.display.gems[idx].pos
-            print coords
+            #print coords
             hit = True
 
         self.display.on_button_down(hit, coords)
@@ -453,7 +413,7 @@ class Player(object):
             self.trail_display.on_touch_down(pos, push)
 
             # start playing solo again if hit
-            self.audio_ctrl.set_mute(False)
+            #self.audio_ctrl.set_mute(False)
             self.display.gem_hit(idx)
 
             # score mechanics
@@ -464,7 +424,7 @@ class Player(object):
             # if hit is in the wrong lane, pass the gem and play sound
             if idx != None:
                 self.display.gem_pass(idx)
-                self.audio_ctrl.play_sfx()
+                #self.audio_ctrl.play_sfx()
 
             self.trail_display.on_miss()
 
@@ -472,9 +432,18 @@ class Player(object):
             self.streak = 0
             self.bonus = 1
 
+    #called by MainWidget
+    def on_trigger_hold(self, pos):
+        self.trail_display.on_trigger_hold(pos)
+
     # called by MainWidget
-    def on_button_up(self):
+    def on_button_up(self, pos):
         self.display.on_button_up()
+        #self.trail_display.on_touch_up()
+
+    def cast_spell(self, shape):
+        if shape:
+            self.display.health.on_hit(1/8.0)
 
     # needed to check if for pass gems (ie, went past the slop window)
     def on_update(self):
@@ -483,7 +452,7 @@ class Player(object):
         # check if there are passed gems
         t = self.display.time
         idx=None
-        hits = self.song.get_gems_in_range(t-.21, t-.11)
+        hits = self.song.get_gems_in_range(t-.21, t-.11) #to account for the fact humans are generally early?
         for h in hits:
             idx = self.song.get_gem_index(h)
             if self.display.gems[idx].here:
@@ -491,7 +460,7 @@ class Player(object):
                 self.trail_display.on_miss()
 
                 # mute until note is hit again
-                self.audio_ctrl.set_mute(True)
+                #self.audio_ctrl.set_mute(True)
 
                 # reset score mechanics
                 self.streak = 0
