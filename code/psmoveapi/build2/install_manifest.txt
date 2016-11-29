@@ -1,0 +1,15 @@
+/usr/local/lib64/pkgconfig/psmoveapi.pc
+/usr/local/lib64/libpsmoveapi.3.1.0.dylib
+/usr/local/lib64/libpsmoveapi.3.dylib
+/usr/local/lib64/libpsmoveapi.dylib
+/usr/local/lib64/libpsmoveapi_tracker.3.1.0.dylib
+/usr/local/lib64/libpsmoveapi_tracker.3.dylib
+/usr/local/lib64/libpsmoveapi_tracker.dylib
+/usr/local/bin/moved
+/usr/local/bin/psmovepair
+/usr/local/bin/magnetometer_calibration
+/usr/local/include/psmoveapi/psmove.h
+/usr/local/include/psmoveapi/psmove_fusion.h
+/usr/local/include/psmoveapi/psmove_tracker.h
+/usr/local/share/psmoveapi/README
+/usr/local/share/psmoveapi/COPYING

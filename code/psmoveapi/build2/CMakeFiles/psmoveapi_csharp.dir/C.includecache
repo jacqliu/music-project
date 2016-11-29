@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../src/../include/psmove.h
+psmove_config.h
+../src/../include/psmove_config.h
+
+../src/../include/psmove_fusion.h
+psmove.h
+../src/../include/psmove.h
+psmove_tracker.h
+../src/../include/psmove_tracker.h
+
+../src/../include/psmove_tracker.h
+psmove.h
+../src/../include/psmove.h
+psmove_config.h
+../src/../include/psmove_config.h
+
+/Users/yugeji/Library/psmoveapi/build2/psmoveCSHARP_wrap.c
+stdlib.h
+-
+string.h
+-
+stdio.h
+-
+psmove.h
+/Users/yugeji/Library/psmoveapi/build2/psmove.h
+psmove_tracker.h
+/Users/yugeji/Library/psmoveapi/build2/psmove_tracker.h
+psmove_fusion.h
+/Users/yugeji/Library/psmoveapi/build2/psmove_fusion.h
+
+psmove_config.h
+

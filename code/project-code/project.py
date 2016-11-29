@@ -86,6 +86,10 @@ class MainWidget(BaseWidget) :
         elif keycode[1] == 'm':
             self.player.on_button_down(None, True)
 
+    #called by psmove, always called three at a time
+    def on_touch(self, pos):
+        print "I DID IT", pos
+
     def on_touch_down(self, touch):
         self.player.on_button_down(touch.pos, False)
 

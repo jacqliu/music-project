@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../src/../include/psmove.h
+psmove_config.h
+../src/../include/psmove_config.h
+
+/Users/yugeji/Library/psmoveapi/examples/c/test_led_pwm_frequency.c
+psmove.h
+/Users/yugeji/Library/psmoveapi/examples/c/psmove.h
+stdio.h
+-
+stdlib.h
+-
+
+psmove_config.h
+

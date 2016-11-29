@@ -1,0 +1,6 @@
+# Hashes of file build rules.
+8b3f127d9a039f27a8094bee217f255a CMakeFiles/processing_lib
+4effa555f710319885667e49ad58d505 CMakeFiles/psmoveapi.jar
+c92873edee7d38395a082cc255400bdf psmoveCSHARP_wrap.c
+1b048d92e8ab92c2763825c6cbad8d3b psmoveJAVA_wrap.c
+8a0631e7c9734d1dc4c1597150dcda31 psmovePYTHON_wrap.c
