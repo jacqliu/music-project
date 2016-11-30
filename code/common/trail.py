@@ -115,13 +115,10 @@ class TrailDisplay(InstructionGroup):
                     return 'x'
             except:
                 pass
-            # print p1, p2, p3, p4
-            # if self.on_the_same_axis(p1, p2) and ((p1[0] < p2[0] and p3[0] > p4[0]) or (p1[0] > p2[0] and p3[0] < p4[0])): #and self.on_the_same_axis(p2, p3) and self.on_the_same_axis(p4, p1):
-            #     return 'x'
 
         #circle detection
         elif len(self.objs) == 1 and len(self.waste_objs) > 0 and len(self.waste_objs_x) == 0: #idk why it equals 2 but...
-            if pt_distance(self.waste_objs[-1].cpos, self.objs[0].cpos) < 30:
+            if pt_distance(self.waste_objs[-1].cpos, self.objs[0].cpos) < 100 and pt_distance(self.waste_objs[len(self.waste_objs)/2].cpos, self.objs[0].cpos) > 200:
                 return 'circle'
 
         #equilateral triangle detection
@@ -137,7 +134,7 @@ class TrailDisplay(InstructionGroup):
             points = []
             for i in range(4):
                 points.append(self.objs[i].cpos)
-            if self.close_enough(points, 1.8):
+            if self.close_enough(points, 2):
                 p1 = self.objs[0].cpos
                 p2 = self.objs[1].cpos
                 p3 = self.objs[2].cpos
@@ -158,7 +155,7 @@ class TrailDisplay(InstructionGroup):
                 
 
     #checks every point in order of creation to make sure they're close enough to each other
-    def close_enough(self, points, ratio): #ratio is float
+    def close_enough(self, points, ratio): #ratio is float that determines edge length allowances
         prior_dist = None
         for i in range(len(points)-1):
             p1 = points[i]

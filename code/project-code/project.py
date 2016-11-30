@@ -32,10 +32,10 @@ from kivy.core.image import Image
 tmo_sfx = "../../sfx.txt"
 # wav_file = "../../mirror_mirror.wav"
 wav_file = "../../xion.wav"
-#wav_file = "../../kh_traverse_town.wav"
+# wav_file = "../../kh_traverse_town.wav"
 # gems_path = "../../mirror_mirror_gems.txt"
 gems_path = "../../xion.txt"
-#gems_path = "../../kh_traverse_town_gems.txt"
+# gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
 
 heart_path = "particle/heart.png"
@@ -91,6 +91,8 @@ class MainWidget(BaseWidget) :
 
         #psmove
         self.data = [None, None, None]
+        self.trigger_held = False
+        self.press_pos = None
 
         #trail display - must be before beat match display, otherwise will translate.... lol
         self.trail_display = TrailDisplay()
@@ -124,6 +126,7 @@ class MainWidget(BaseWidget) :
     def ps_on_touch_up(self, pos):
         self.player.on_button_up(pos)
 
+    #called by normal mouse and keyboard control
     def on_touch_down(self, touch):
         self.player.on_button_down(touch.pos, False)
 
@@ -133,31 +136,38 @@ class MainWidget(BaseWidget) :
     def on_touch_up(self, touch):
         self.player.on_button_up(touch.pos)
 
-
     def on_key_up(self, keycode):
         pass
         
     def on_update(self):
-        #getting data form psmove
-        prev_val = None
+        #getting data form psmove. Trigger presses and releases are events, otherwise vals will be [0, 0].
+        
         try:
             # Check for a message, this will not block
             z = socket.recv(flags=zmq.NOBLOCK)
             p = zlib.decompress(z)
             (vals, [x, y], radius) = pickle.loads(p) #data from test.py
             
-            # print "Message received:", pickle.loads(p)
+            #print "Message received:", pickle.loads(p)
+            
+            #normalize x and y
+            if y > 500: #y actually has an upper and lower bound
+                y = 500
+            x = x/600.0
+            y = (500-y)/500.0 #reverse direction
+            pos = [x*Window.height + 100, y*Window.height] #so technically there is a bounding box... but if x exceeds expectations, that's ok too  
+            #print pos
 
-            # pos = [x/700.*Window.height+200,(700-y)/700*Window.height-100]
-            pos = [x+200, 600-y]
-            print pos
-
-
+            #button action control
             if vals[0] == TRIGGER_VAL: #press down trigger
                 self.ps_on_touch_down(pos, False)
-                if prev_val == vals: #has been holding trigger
-                    self.ps_on_touch_move(pos)
-            elif vals[0] == MOVE_BUTTON_VAL and prev_val != vals: #press down move button
+                self.trigger_held = True
+                self.press_pos = pos
+            elif vals[1] == TRIGGER_VAL:
+                self.press_pos = None
+                self.trigger_held = False
+                    
+            elif vals[0] == MOVE_BUTTON_VAL: #press down move button
                 self.ps_on_touch_down(pos, True)
 
             elif vals[0] == 0:
@@ -166,12 +176,15 @@ class MainWidget(BaseWidget) :
             elif vals[0] == TRIANGLE_VAL:
                 self.paused = not self.paused
 
-
-            prev_val = vals
+            #decide if trigger was being held
+            if self.trigger_held and self.press_pos != None:
+                if pt_distance(pos, self.press_pos) > 60: #threshold for movement to be considered a hold
+                    self.ps_on_touch_move(pos)
 
         except zmq.Again as e:
             pass
 
+        #display text
         self.info.text = '\n\n\nScore: '+ str(self.player.score)
         self.info.text += '\nGenerators: ' + str(len(self.objects.objects))
         self.info.text += '\nStreak: ' + str(self.player.streak)
@@ -405,6 +418,7 @@ class BeatMatchDisplay(InstructionGroup):
         #     self.add(l)
 
         # make gems
+        self.shapes_count = 0
         self.gems_raw = gem_data
         self.gems = []
         for (t,letter) in self.gems_raw:
@@ -423,6 +437,7 @@ class BeatMatchDisplay(InstructionGroup):
             # indicate suggested shape
             if letter in ['c', 't', 's', 'd', 'x']:
                 self.add_shape(letter, pos)
+                self.shapes_count += 1
                 # text = Image(heart_path).texture
                 # self.add(Rectangle(texture=text, pos=pos, size=(20, 20)))
                 # self.add(VertexInstruction(source=heart_path, pos=pos, size=(50, 50)))
@@ -533,9 +548,13 @@ class Player(object):
         self.display.on_button_up()
         #self.trail_display.on_touch_up()
 
+    #determines how much damage is done
     def cast_spell(self, shape):
         if shape:
-            self.display.health.on_hit(1/8.0)
+            # shapes_dict = {'diamond': 5, 'triangle': 4, 'x': 3, 'circle': 2, 'square': 5}
+            # len_shape = shapes_dict[shape]
+            self.display.shapes_count = max(5, self.display.shapes_count) #so we can play unauthored ones too
+            self.display.health.on_hit(1./self.display.shapes_count)
 
     # needed to check if for pass gems (ie, went past the slop window)
     def on_update(self):

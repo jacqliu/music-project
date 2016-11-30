@@ -71,12 +71,15 @@ while True:
     if status == psmove.Tracker_TRACKING:
         x, y, radius = tracker.get_position(move)
         vals = move.get_button_events()
-        if vals[0] != 0 or vals[1] != 0:
-            data = (vals, [x, y], radius)
+        #if vals[0] != 0 or vals[1] != 0:
+        data = (vals, [x, y], radius)
 
-            p = pickle.dumps(data, protocol=2) 
-            z = zlib.compress(p)
-            socket.send(z)
+        p = pickle.dumps(data, protocol=2) 
+        z = zlib.compress(p)
+        socket.send(z)
+
+
+        
             #sending over socket
             # send_data(str([x, y]))
             # send_data(str(radius))
