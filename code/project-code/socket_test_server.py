@@ -1,7 +1,11 @@
 import socket
 import sys
+import zmq
 
 #from project import *
+
+current_idx = 0
+data_store = [None, None, None]
 
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,11 +18,19 @@ sock.bind(server_address)
 # Listen for incoming connections
 sock.listen(1)
 
+# Set up ZeroMQ
+context = zmq.Context()
+socket = context.socket(zmq.PAIR)
+socket.connect("tcp://localhost:5555")
+
 while True:
-# Wait for a connection
+
+	# Wait for a connection
 	#print >>sys.stderr, 'waiting for a connection'
 	connection, client_address = sock.accept()
 	#print >>sys.stderr, 'connection', connection
+
+
 
 	try:
 	    #print >>sys.stderr, 'connection from', client_address
@@ -26,7 +38,9 @@ while True:
 	    # Receive the data in small chunks and retransmit it
 	    #while True:
 	    data = connection.recv(128)
-	    on_touch(data)
+	    print data
+	    socket.send(data)
+	    #on_touch(data)
 
 	    #print >>sys.stderr, 'received "%s"' % data.decode()
 

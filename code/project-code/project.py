@@ -20,6 +20,9 @@ from common.kivyparticle import ParticleSystem
 import random
 import numpy as np
 import bisect
+import zmq
+import zlib
+import pickle
 
 from kivy.core.image import Image
 
@@ -42,6 +45,10 @@ triangle_path = 'particle/triangle.png'
 diamond_path = 'particle/diamond.png'
 x_path = 'particle/x.png'
 
+MOVE_BUTTON_VAL = 524288
+TRIGGER_VAL = 1048576
+TRIANGLE_VAL = 16
+
 # some colors in hsv
 red = (0,1,1)
 lime = (1./3, 1,1)
@@ -53,13 +60,17 @@ white = (0,0,1)
 
 time_len = 200
 
+# Set up ZeroMQ
+context = zmq.Context()
+socket = context.socket(zmq.PAIR)
+socket.bind("tcp://*:5555")
+
 class MainWidget(BaseWidget) :
     def __init__(self):
         super(MainWidget, self).__init__()
         # text for scoring
         self.info = topleft_label()
         self.add_widget(self.info)
-
 
         # audio controller
         self.audioctrl = AudioController(wav_file)
@@ -78,6 +89,9 @@ class MainWidget(BaseWidget) :
         self.ps = ParticleSystem('particle/particle.pex')
         self.add_widget(self.ps)
 
+        #psmove
+        self.data = [None, None, None]
+
         #trail display - must be before beat match display, otherwise will translate.... lol
         self.trail_display = TrailDisplay()
         self.objects.add(self.trail_display)
@@ -93,29 +107,71 @@ class MainWidget(BaseWidget) :
 
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
-        if keycode[1] == 'p':
-            self.paused = not self.paused
+        pass
+        # if keycode[1] == 'p':
+        #     self.paused = not self.paused
 
-        elif keycode[1] == 'm':
-            self.player.on_button_down(None, True)
+        # elif keycode[1] == 'm':
+        #     self.player.on_button_down(None, True)
 
     #called by psmove, always called three at a time
-    def on_touch(self, pos):
-        print "I DID IT", pos
+    def ps_on_touch_down(self, pos, move_button_down):
+        self.player.on_button_down(pos, move_button_down)
 
-    def on_touch_down(self, touch):
-        self.player.on_button_down(touch.pos, False)
+    def ps_on_touch_move(self, pos):
+        self.player.on_trigger_hold(pos)
 
-    def on_touch_move(self, touch):
-        self.player.on_trigger_hold(touch.pos)
+    def ps_on_touch_up(self, pos):
+        self.player.on_button_up(pos)
 
-    def on_touch_up(self, touch):
-        self.player.on_button_up(touch.pos)
+    # def on_touch_down(self, touch):
+    #     self.player.on_button_down(touch.pos, False)
+
+    # def on_touch_move(self, touch):
+    #     self.player.on_trigger_hold(touch.pos)
+
+    # def on_touch_up(self, touch):
+    #     self.player.on_button_up(touch.pos)
+
 
     def on_key_up(self, keycode):
         pass
         
-    def on_update(self) :
+    def on_update(self):
+        #getting data form psmove
+        prev_val = None
+        try:
+            # Check for a message, this will not block
+            z = socket.recv(flags=zmq.NOBLOCK)
+            p = zlib.decompress(z)
+            (vals, [x, y], radius) = pickle.loads(p) #data from test.py
+            
+            # print "Message received:", pickle.loads(p)
+
+            # pos = [x/700.*Window.height+200,(700-y)/700*Window.height-100]
+            pos = [x+200, 600-y]
+            print pos
+
+
+            if vals[0] == TRIGGER_VAL: #press down trigger
+                self.ps_on_touch_down(pos, False)
+                if prev_val == vals: #has been holding trigger
+                    self.ps_on_touch_move(pos)
+            elif vals[0] == MOVE_BUTTON_VAL and prev_val != vals: #press down move button
+                self.ps_on_touch_down(pos, True)
+
+            elif vals[0] == 0:
+                self.ps_on_touch_up(pos)
+
+            elif vals[0] == TRIANGLE_VAL:
+                self.paused = not self.paused
+
+
+            prev_val = vals
+
+        except zmq.Again as e:
+            pass
+
         self.info.text = '\n\n\nScore: '+ str(self.player.score)
         self.info.text += '\nGenerators: ' + str(len(self.objects.objects))
         self.info.text += '\nStreak: ' + str(self.player.streak)
@@ -126,7 +182,8 @@ class MainWidget(BaseWidget) :
             self.player.on_update()
             self.objects.on_update()
         else:
-            self.info.text += '\n\nPress p to start!'
+            self.info.text += '\n\nPress triangle to start!'
+
 
 
 # creates the Audio driver

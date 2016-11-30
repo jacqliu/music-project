@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'build'))
 
 from data_client import *
 import psmove
+import zlib, pickle, zmq
 
 tracker = psmove.PSMoveTracker()
 move = psmove.PSMove()
@@ -50,6 +51,11 @@ while result != psmove.Tracker_CALIBRATED:
 auto_update_leds = tracker.get_auto_update_leds(move)
 print('Auto-update LEDs is', ('enabled' if auto_update_leds else 'disabled'))
 
+# Set up ZeroMQ
+context = zmq.Context()
+socket = context.socket(zmq.PAIR)
+socket.connect("tcp://localhost:5555")
+
 # Loop and update the controller
 while True:
     # Get the latest input report from the controller
@@ -65,12 +71,15 @@ while True:
     if status == psmove.Tracker_TRACKING:
         x, y, radius = tracker.get_position(move)
         vals = move.get_button_events()
-        if vals != [0,0]:
-            data_string = str(vals) + " " + str((x, y, radius)) #+ "\t" + str(y) + "\t" + str(radius)
-            print (data_string)
-            send_data(str(vals)) #sending over socket
-            send_data(str([x, y]))
-            send_data(str(radius))
+        if vals[0] != 0 or vals[1] != 0:
+            data = (vals, [x, y], radius)
+
+            p = pickle.dumps(data, protocol=2) 
+            z = zlib.compress(p)
+            socket.send(z)
+            #sending over socket
+            # send_data(str([x, y]))
+            # send_data(str(radius))
         #     print(vals)
         # print('Position: (%5.2f, %5.2f), Radius: %3.2f, Trigger: %3d' % (
         #         x, y, radius, move.get_trigger()))
@@ -78,7 +87,8 @@ while True:
         
 
     elif status == psmove.Tracker_CALIBRATED:
-        print('Not currently tracking.')
+        #print('Not currently tracking.')
+        pass
     elif status == psmove.Tracker_CALIBRATION_ERROR:
         print('Calibration error.')
     elif status == psmove.Tracker_NOT_CALIBRATED:

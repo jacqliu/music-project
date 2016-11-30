@@ -37,7 +37,7 @@ class TrailDisplay(InstructionGroup):
             #self.objects.add(new)
             self.objs.append(new)
         else:
-            self.timer_push = .3
+            self.timer_push = .2
             if self.objs:
                 lines = []
                 for i in range(len(self.objs)-1):
@@ -80,7 +80,7 @@ class TrailDisplay(InstructionGroup):
 
     def on_miss(self):
         self.color.h, self.color.s, self.color.v = (0, 1, 1)
-        self.timer_miss = .2
+        self.timer_miss = .15
 
     def on_update(self, dt):
         self.timer_push -= dt
