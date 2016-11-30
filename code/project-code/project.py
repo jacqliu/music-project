@@ -40,6 +40,7 @@ circle_path = 'particle/circle.png'
 square_path = 'particle/square.png'
 triangle_path = 'particle/triangle.png'
 diamond_path = 'particle/diamond.png'
+x_path = 'particle/x.png'
 
 # some colors in hsv
 red = (0,1,1)
@@ -363,17 +364,17 @@ class BeatMatchDisplay(InstructionGroup):
             self.add(g)
 
             # indicate suggested shape
-            if letter in ['c', 't', 's', 'd']:
+            if letter in ['c', 't', 's', 'd', 'x']:
                 self.add_shape(letter, pos)
                 # text = Image(heart_path).texture
                 # self.add(Rectangle(texture=text, pos=pos, size=(20, 20)))
                 # self.add(VertexInstruction(source=heart_path, pos=pos, size=(50, 50)))
 
     def add_shape(self, letter, pos):
-        shape_map = {'c':circle_path, 't':triangle_path, 's': square_path, 'd': diamond_path}
-        # text = Image(shape_map[letter]).texture
-        text = Image(heart_path).texture
-        print text
+        shape_map = {'c':circle_path, 't':triangle_path, 's': square_path, 'd': diamond_path, 'x': x_path}
+        text = Image(shape_map[letter]).texture
+        # text = Image(heart_path).texture
+        # print text
         self.add(Rectangle(texture=text, pos=(pos[0]-11, pos[1]-40), size=(20, 20), color=cyan))
 
     # called by Player. Causes the right thing to happen
