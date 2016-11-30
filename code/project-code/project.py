@@ -11,7 +11,7 @@ from common.gfxutil import *
 from common.note import *
 from common.trail import *
 
-from kivy.graphics.instructions import InstructionGroup
+from kivy.graphics.instructions import InstructionGroup, VertexInstruction
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics import PushMatrix, PopMatrix, Translate, Scale, Rotate
 from kivy.clock import Clock as kivyClock
@@ -21,14 +21,25 @@ import random
 import numpy as np
 import bisect
 
+from kivy.core.image import Image
+
+
 # appropriate files
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
-#wav_file = "../../mirror_mirror.wav"
-wav_file = "../../xion.wav"
-#gems_path = "../../mirror_mirror_gems.txt"
-gems_path = "../../xion.txt"
+# wav_file = "../../mirror_mirror.wav"
+# wav_file = "../../xion.wav"
+wav_file = "../../kh_traverse_town.wav"
+# gems_path = "../../mirror_mirror_gems.txt"
+# gems_path = "../../xion.txt"
+gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
+
+heart_path = "particle/heart.png"
+circle_path = 'particle/circle.png'
+square_path = 'particle/square.png'
+triangle_path = 'particle/triangle.png'
+diamond_path = 'particle/diamond.png'
 
 # some colors in hsv
 red = (0,1,1)
@@ -47,6 +58,7 @@ class MainWidget(BaseWidget) :
         # text for scoring
         self.info = topleft_label()
         self.add_widget(self.info)
+
 
         # audio controller
         self.audioctrl = AudioController(wav_file)
@@ -166,14 +178,14 @@ class SongData(object):
         with open(gem_file) as f:
             content = f.readlines()
         for line in content:
-            time, note = line.split('\t')
+            time, note = line.strip().split('\t')
             self.gems.append((time, note))
 
         # get barlines
         with open(barline_file) as f:
             content = f.readlines()
         for line in content:
-            time, note = line.split('\t')
+            time, note = line.strip().split('\t')
             self.barlines.append(time)
 
     def get_gems(self):
@@ -337,14 +349,32 @@ class BeatMatchDisplay(InstructionGroup):
         # make gems
         self.gems_raw = gem_data
         self.gems = []
-        for (t,_) in self.gems_raw:
+        for (t,letter) in self.gems_raw:
             # make gem in correct lane and location
             pos = [float(t)*time_len+100, 555]
 
-            c = colors[0]
+            # colors for downbeat
+            if letter == 'b':
+                c = colors[1]
+            else:
+                c = colors[0]
             g = GemDisplay(pos, c)
             self.gems.append(g)
             self.add(g)
+
+            # indicate suggested shape
+            if letter in ['c', 't', 's', 'd']:
+                self.add_shape(letter, pos)
+                # text = Image(heart_path).texture
+                # self.add(Rectangle(texture=text, pos=pos, size=(20, 20)))
+                # self.add(VertexInstruction(source=heart_path, pos=pos, size=(50, 50)))
+
+    def add_shape(self, letter, pos):
+        shape_map = {'c':circle_path, 't':triangle_path, 's': square_path, 'd': diamond_path}
+        # text = Image(shape_map[letter]).texture
+        text = Image(heart_path).texture
+        print text
+        self.add(Rectangle(texture=text, pos=(pos[0]-11, pos[1]-40), size=(20, 20), color=cyan))
 
     # called by Player. Causes the right thing to happen
     def gem_hit(self, gem_idx):
