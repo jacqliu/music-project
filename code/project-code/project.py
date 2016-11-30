@@ -49,14 +49,7 @@ MOVE_BUTTON_VAL = 524288
 TRIGGER_VAL = 1048576
 TRIANGLE_VAL = 16
 
-# some colors in hsv
-red = (0,1,1)
-lime = (1./3, 1,1)
-blue = (2./3, 1,1)
-yellow = (1./6, 1,1)
-cyan = (.5,1,1)
-colors = [red, lime, blue, yellow, cyan]
-white = (0,0,1)
+# some colors in hsv - now in gfxutil
 
 time_len = 200
 
@@ -427,9 +420,9 @@ class BeatMatchDisplay(InstructionGroup):
 
             # colors for downbeat
             if letter == 'b':
-                c = colors[1]
+                c = white
             else:
-                c = colors[0]
+                c = red
             g = GemDisplay(pos, c)
             self.gems.append(g)
             self.add(g)
@@ -447,7 +440,9 @@ class BeatMatchDisplay(InstructionGroup):
         text = Image(shape_map[letter]).texture
         # text = Image(heart_path).texture
         # print text
+        self.add(Color(hsv = color_map[letter])) #set color of thing. Color_map comes from trail.py
         self.add(Rectangle(texture=text, pos=(pos[0]-11, pos[1]-40), size=(20, 20), color=cyan))
+        self.add(self.color) #set back to original
 
     # called by Player. Causes the right thing to happen
     def gem_hit(self, gem_idx):
@@ -551,8 +546,6 @@ class Player(object):
     #determines how much damage is done
     def cast_spell(self, shape):
         if shape:
-            # shapes_dict = {'diamond': 5, 'triangle': 4, 'x': 3, 'circle': 2, 'square': 5}
-            # len_shape = shapes_dict[shape]
             self.display.shapes_count = max(5, self.display.shapes_count) #so we can play unauthored ones too
             self.display.health.on_hit(1./self.display.shapes_count)
 

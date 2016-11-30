@@ -19,6 +19,17 @@ from kivy.core.window import Window
 
 import numpy as np
 
+red = (0,1,1)
+gold = (.1, 1, 1) #not actually gold. please change to gold.
+yellow = (.17, 1, 1)
+lime = (.33, 1, 1)
+green = (.4, 1, 1)
+cyan = (.5, 1, 1)
+blue = (.67, 1, 1)
+purple = (.8, 1, 1)
+magenta = (.9, 1, 1)
+#colors = [red, orange, yellow, lime, green, cyan, blue]
+white = (0,0,1)
 
 # return a Label object configured to look good and be positioned at
 # the top-left of the screen

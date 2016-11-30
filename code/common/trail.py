@@ -11,7 +11,7 @@ from kivy.core.window import Window
 import numpy as np
 from gfxutil import *
 
-gold = (.1,1,1) #not actually gold right now.
+color_map = {'c': magenta, 't': lime, 's': blue, 'd': cyan, 'x': purple}
 
 class TrailDisplay(InstructionGroup):
     def __init__(self): #callback function takes in which shape was created
@@ -39,7 +39,7 @@ class TrailDisplay(InstructionGroup):
             self.objs.append(new)
         else:
             self.timer_push = .2
-            if self.objs and len(self.waste_objs_x) == 0 and len(self.waste_objs) == 0: #len 2 is special case for X
+            if self.objs and len(self.waste_objs_x) < 5 and len(self.waste_objs) < 5: #len 2 is special case for X
                 lines = []
                 for i in range(len(self.objs)-1):
                     pos1 = self.objs[i].cpos
@@ -51,8 +51,8 @@ class TrailDisplay(InstructionGroup):
                 self.add(line)
                 self.objs += lines + [line]
 
-            else:
-                print 'pushed without objects'
+            # else:
+            #     print 'pushed without objects'
 
             #categorize shapes
             shape = self.possible_types_object()
@@ -64,15 +64,15 @@ class TrailDisplay(InstructionGroup):
             print shape
 
             if shape == 'triangle':
-                self.color.h, self.color.s, self.color.v = (1./3, 1,1) #green
+                self.color.h, self.color.s, self.color.v = color_map['t']
             elif shape == 'square':
-                self.color.h, self.color.s, self.color.v = (2./3, 1,1) #blue
+                self.color.h, self.color.s, self.color.v = color_map['s']
             elif shape == 'diamond':
-                self.color.h, self.color.s, self.color.v = (.5, 1,1) #light blue
+                self.color.h, self.color.s, self.color.v = color_map['d']
             elif shape == 'circle':
-                self.color.h, self.color.s, self.color.v = (.9, 1,1) #magenta
+                self.color.h, self.color.s, self.color.v = color_map['c']
             elif shape == 'x':
-                self.color.h, self.color.s, self.color.v = (.5, 1,1)
+                self.color.h, self.color.s, self.color.v = color_map['x']
 
 
     def on_trigger_hold(self, pos):
@@ -87,7 +87,7 @@ class TrailDisplay(InstructionGroup):
             self.waste_objs.append(new)
 
     def on_miss(self):
-        self.color.h, self.color.s, self.color.v = (0, 1, 1)
+        self.color.h, self.color.s, self.color.v = red
         self.timer_miss = .15
 
     def on_update(self, dt):
@@ -103,8 +103,13 @@ class TrailDisplay(InstructionGroup):
             self.color.h, self.color.s, self.color.v = gold
 
     def possible_types_object(self):
+        #circle detection
+        if len(self.objs) == 1 and len(self.waste_objs) > 0: #and len(self.waste_objs_x) == 0: #idk why it equals 2 but...
+            if pt_distance(self.waste_objs[-1].cpos, self.objs[0].cpos) < 100 and pt_distance(self.waste_objs[len(self.waste_objs)/2].cpos, self.objs[0].cpos) > 200:
+                return 'circle'
+
         #X detection
-        if len(self.objs) == 2 and len(self.waste_objs_x) > 0:
+        elif len(self.objs) == 2 and len(self.waste_objs_x) > 0:
             p1 = self.objs[0].cpos
             p2 = self.objs[1].cpos
             try:
@@ -115,11 +120,6 @@ class TrailDisplay(InstructionGroup):
                     return 'x'
             except:
                 pass
-
-        #circle detection
-        elif len(self.objs) == 1 and len(self.waste_objs) > 0 and len(self.waste_objs_x) == 0: #idk why it equals 2 but...
-            if pt_distance(self.waste_objs[-1].cpos, self.objs[0].cpos) < 100 and pt_distance(self.waste_objs[len(self.waste_objs)/2].cpos, self.objs[0].cpos) > 200:
-                return 'circle'
 
         #equilateral triangle detection
         elif len(self.objs) == 6:

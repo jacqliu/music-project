@@ -1,1 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/c++    -std=c++11 -stdlib=libc++ -arch x86_64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -stdlib=libc++ CMakeFiles/moved.dir/src/utils/moved.c.o  -o moved  libpsmoveapi_static.a -framework Foundation -framework AVFoundation -framework IOKit -framework CoreFoundation -framework IOBluetooth 
