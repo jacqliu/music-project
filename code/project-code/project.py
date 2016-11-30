@@ -31,11 +31,11 @@ from kivy.core.image import Image
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
 # wav_file = "../../mirror_mirror.wav"
-# wav_file = "../../xion.wav"
-wav_file = "../../kh_traverse_town.wav"
+wav_file = "../../xion.wav"
+#wav_file = "../../kh_traverse_town.wav"
 # gems_path = "../../mirror_mirror_gems.txt"
-# gems_path = "../../xion.txt"
-gems_path = "../../kh_traverse_town_gems.txt"
+gems_path = "../../xion.txt"
+#gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
 
 heart_path = "particle/heart.png"
@@ -107,12 +107,12 @@ class MainWidget(BaseWidget) :
 
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
-        pass
-        # if keycode[1] == 'p':
-        #     self.paused = not self.paused
+        # pass
+        if keycode[1] == 'p':
+            self.paused = not self.paused
 
-        # elif keycode[1] == 'm':
-        #     self.player.on_button_down(None, True)
+        elif keycode[1] == 'm':
+            self.player.on_button_down(None, True)
 
     #called by psmove, always called three at a time
     def ps_on_touch_down(self, pos, move_button_down):
@@ -124,14 +124,14 @@ class MainWidget(BaseWidget) :
     def ps_on_touch_up(self, pos):
         self.player.on_button_up(pos)
 
-    # def on_touch_down(self, touch):
-    #     self.player.on_button_down(touch.pos, False)
+    def on_touch_down(self, touch):
+        self.player.on_button_down(touch.pos, False)
 
-    # def on_touch_move(self, touch):
-    #     self.player.on_trigger_hold(touch.pos)
+    def on_touch_move(self, touch):
+        self.player.on_trigger_hold(touch.pos)
 
-    # def on_touch_up(self, touch):
-    #     self.player.on_button_up(touch.pos)
+    def on_touch_up(self, touch):
+        self.player.on_button_up(touch.pos)
 
 
     def on_key_up(self, keycode):

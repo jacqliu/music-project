@@ -24,8 +24,9 @@ class TrailDisplay(InstructionGroup):
 
         self.objs = []
         self.waste_objs = [] #not certain how many this holds...
+        self.waste_objs_x = [] #just for the second one in x's
 
-        self.shapes = {'triangle': 0, 'square': 0, 'diamond': 0, 'circle': 0}
+        self.shapes = {'triangle': 0, 'square': 0, 'diamond': 0, 'x': 0, 'circle': 0}
 
 
     def on_touch_down(self, pos, push):
@@ -38,7 +39,7 @@ class TrailDisplay(InstructionGroup):
             self.objs.append(new)
         else:
             self.timer_push = .2
-            if self.objs:
+            if self.objs and len(self.waste_objs_x) == 0 and len(self.waste_objs) == 0: #len 2 is special case for X
                 lines = []
                 for i in range(len(self.objs)-1):
                     pos1 = self.objs[i].cpos
@@ -69,11 +70,18 @@ class TrailDisplay(InstructionGroup):
             elif shape == 'diamond':
                 self.color.h, self.color.s, self.color.v = (.5, 1,1) #light blue
             elif shape == 'circle':
-                self.color.h, self.color.s, self.color.v = (.9, 1,1) 
+                self.color.h, self.color.s, self.color.v = (.9, 1,1) #magenta
+            elif shape == 'x':
+                self.color.h, self.color.s, self.color.v = (.5, 1,1)
 
 
     def on_trigger_hold(self, pos):
-        if len(self.objs) != 0:
+        #special case for X
+        if len(self.objs) == 2:
+            new = CEllipse(cpos = pos, size = (10, 10), segments = 40)
+            self.add(new)
+            self.waste_objs_x.append(new)
+        elif len(self.objs) != 0:
             new = CEllipse(cpos = pos, size = (10, 10), segments = 40)
             self.add(new)
             self.waste_objs.append(new)
@@ -86,27 +94,36 @@ class TrailDisplay(InstructionGroup):
         self.timer_push -= dt
         self.timer_miss -= dt
         if self.timer_push < 0 or self.timer_miss < 0:
-            #clear objects
-            for o in (self.objs+self.waste_objs):
+            ####### CLEAR OBJECTS SUPER IMPORTANT ########
+            for o in (self.objs+self.waste_objs+self.waste_objs_x):
                 self.remove(o)
             self.objs = []
             self.waste_objs = []
+            self.waste_objs_x = []
             self.color.h, self.color.s, self.color.v = gold
-            #self.add(self.color)
-        # if self.timer_miss < 0:
-        #     for o in self.objs:
-        #         self.remove(o)
-        #     #self.clear()
-        #     self.color.h, self.color.s, self.color.v = (0, 0, 1)
-        #     #self.add(self.color)
-        # for o in self.objs:
-        #     o.on_update(dt)
 
     def possible_types_object(self):
+        #X detection
+        if len(self.objs) == 2 and len(self.waste_objs_x) > 0:
+            p1 = self.objs[0].cpos
+            p2 = self.objs[1].cpos
+            try:
+                p3 = self.waste_objs[-1].cpos
+                p4 = self.waste_objs_x[-1].cpos
+                print p1, p2, p3, p4
+                if self.on_the_same_axis(p1, p2) and ((p1[0] < p2[0] and p3[0] > p4[0]) or (p1[0] > p2[0] and p3[0] < p4[0])): #and self.on_the_same_axis(p2, p3) and self.on_the_same_axis(p4, p1):
+                    return 'x'
+            except:
+                pass
+            # print p1, p2, p3, p4
+            # if self.on_the_same_axis(p1, p2) and ((p1[0] < p2[0] and p3[0] > p4[0]) or (p1[0] > p2[0] and p3[0] < p4[0])): #and self.on_the_same_axis(p2, p3) and self.on_the_same_axis(p4, p1):
+            #     return 'x'
+
         #circle detection
-        if len(self.objs) == 2 and len(self.waste_objs) != 0: #idk why it equals 2 but...
+        elif len(self.objs) == 1 and len(self.waste_objs) > 0 and len(self.waste_objs_x) == 0: #idk why it equals 2 but...
             if pt_distance(self.waste_objs[-1].cpos, self.objs[0].cpos) < 30:
                 return 'circle'
+
         #equilateral triangle detection
         elif len(self.objs) == 6:
             points = []

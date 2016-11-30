@@ -9,3 +9,4 @@ TODO:
 -get sockets to connect python3 and python2
 -try Kivy 3-D
 -change song authoring to mark 1. downbeats and 2. starts of shapes/colors of gems
+-make sure passed gems can't be hit
