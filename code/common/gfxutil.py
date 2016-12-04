@@ -15,7 +15,14 @@ from kivy.graphics import Rectangle, Ellipse, Color, Fbo, ClearBuffers, ClearCol
 from kivy.graphics import PushMatrix, PopMatrix, Scale, Callback
 from kivy.graphics.texture import Texture
 from kivy.uix.label import Label
-from kivy.core.window import Window
+#from kivy.core.window import Window
+#size of Yuge's computer
+class Yuge_Window():
+    def __init__(self):
+        self.width = 1440
+        self.height = 851
+
+Window = Yuge_Window()
 
 import numpy as np
 

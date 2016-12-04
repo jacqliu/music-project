@@ -10,6 +10,7 @@ from common.wavesrc import *
 from common.gfxutil import *
 from common.note import *
 from common.trail import *
+from common.displays import *
 
 from kivy.graphics.instructions import InstructionGroup, VertexInstruction
 from kivy.graphics import Color, Ellipse, Line, Rectangle
@@ -26,7 +27,6 @@ import pickle
 
 from kivy.core.image import Image
 
-
 # appropriate files
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
@@ -37,6 +37,7 @@ wav_file = "../../kh_traverse_town.wav"
 # gems_path = "../../xion.txt"
 gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
+bg_source = "../../background.png"
 
 heart_path = "particle/heart.png"
 circle_path = 'particle/circle.png'
@@ -49,9 +50,8 @@ MOVE_BUTTON_VAL = 524288
 TRIGGER_VAL = 1048576
 TRIANGLE_VAL = 16
 
-# some colors in hsv - now in gfxutil
-
 time_len = 200
+now_bar_loc = 100
 
 # Set up ZeroMQ
 context = zmq.Context()
@@ -61,12 +61,17 @@ socket.bind("tcp://*:5555")
 class MainWidget(BaseWidget) :
     def __init__(self):
         super(MainWidget, self).__init__()
-        # text for scoring
-        self.info = topleft_label()
-        self.add_widget(self.info)
 
         # audio controller
         self.audioctrl = AudioController(wav_file)
+
+        # background
+        self.background = BGWidget(bg_source)
+        self.add_widget(self.background)
+
+        # text for scoring
+        self.info = topleft_label()
+        self.add_widget(self.info)
 
         # keep track of objects
         self.objects = AnimGroup()
@@ -86,6 +91,10 @@ class MainWidget(BaseWidget) :
         self.data = [None, None, None]
         self.trigger_held = False
         self.press_pos = None
+
+        #background display
+        # self.bg_display = BGDisplay()
+        # self.objects.add(self.bg_display)
 
         #cursor display
         self.cursor_display = CursorDisplay()
@@ -331,7 +340,6 @@ class GemDisplay(InstructionGroup):
 
         return self.here
 
-
 # Displays one button on the nowbar
 class ButtonDisplay(InstructionGroup):
     def __init__(self, ps):
@@ -353,41 +361,6 @@ class ButtonDisplay(InstructionGroup):
     def on_update(self, dt):
         pass
 
-class HealthDisplay(InstructionGroup):
-    def __init__(self):
-        super(HealthDisplay, self).__init__()
-        self.health_left = 100.0
-
-        self.health_bar = Line(points = [0, Window.height, Window.width*self.health_left/100.0, Window.height], width = 30, cap = 'none')
-        self.damage_bar = Line(points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height], width = 30, cap = 'none')
-        self.add(Color(hsv = yellow))
-        self.add(self.health_bar)
-        self.add(Color(hsv = lime))
-        self.add(self.damage_bar)
-
-    def on_hit(self, frac):
-        self.health_left -= 100*frac
-        self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
-        self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
-
-    def on_gain(self, frac):
-        self.health_left += 100*frac
-        self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
-        self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
-
-class CursorDisplay(InstructionGroup):
-    def __init__(self):
-        super(CursorDisplay, self).__init__()
-        self.pos = (0, 0)
-        self.cursor = CEllipse(cpos = self.pos, size = (15, 15), segments = 40)
-        self.color = Color(hsv = cyan)
-
-        self.add(self.color)
-        self.add(self.cursor)
-
-    def on_update(self, dt):
-        self.cursor.cpos = self.pos
-
 # Displays all game elements: Nowbar, Buttons, BarLines, Gems.
 # scrolls the gem display.
 # controls the gems and nowbar buttons
@@ -404,11 +377,11 @@ class BeatMatchDisplay(InstructionGroup):
         # only 2 lanes
         self.lanes = []
         for i in range(Window.height-60, Window.height, 30):
-            line = Line(points=[0, i, 800, i])
+            line = Line(points=[0, i, Window.width, i])
             self.lanes.append(line)
             self.add(line)
 
-        self.now_bar = Line(points=[100, Window.height-60, 100, Window.height-30], width=1) #TODO - switch to relative to height of window
+        self.now_bar = Line(points=[now_bar_loc, Window.height-60, now_bar_loc, Window.height-30], width=1) #TODO - switch to relative to height of window
         self.add(self.now_bar)
         
         # make button for now bar
@@ -436,7 +409,7 @@ class BeatMatchDisplay(InstructionGroup):
         self.gems = []
         for (t,letter) in self.gems_raw:
             # make gem in correct lane and location
-            pos = [float(t)*time_len+100, 555]
+            pos = [float(t)*time_len+now_bar_loc, Window.height-60+15]
 
             # colors for downbeat
             if letter == 'b':
