@@ -30,12 +30,12 @@ class TrailDisplay(InstructionGroup):
 
 
     def on_touch_down(self, pos, push):
+        #draw shapes, game logic
         if not push:
             self.timer_miss = 100
             self.timer_push = 100
             new = CEllipse(cpos = pos, size = (30, 30), segments = 40)
             self.add(new)
-            #self.objects.add(new)
             self.objs.append(new)
         else:
             self.timer_push = .2
@@ -126,7 +126,7 @@ class TrailDisplay(InstructionGroup):
             points = []
             for i in range(3):
                 points.append(self.objs[i].cpos)
-            if self.close_enough(points, 1.4):
+            if self.close_enough(points, 1.5):
                 return 'triangle'
 
         #square or diamond detection
@@ -155,7 +155,7 @@ class TrailDisplay(InstructionGroup):
                 
 
     #checks every point in order of creation to make sure they're close enough to each other
-    def close_enough(self, points, ratio): #ratio is float that determines edge length allowances
+    def close_enough(self, points, ratio): #smaller ratio requires points to be closer together
         prior_dist = None
         for i in range(len(points)-1):
             p1 = points[i]
@@ -171,7 +171,7 @@ class TrailDisplay(InstructionGroup):
         return True
 
     def on_the_same_axis(self, p1, p2):
-        ratio = pt_distance(p1, p2)/4.0
+        ratio = pt_distance(p1, p2)/2.0 #smaller denominator means user can be more off
         return (abs(p1[0] - p2[0]) < ratio or abs(p1[1] - p2[1]) < ratio)
 
     #checks if p3 and p4 are on opposite sides of the line drawn by p1 and p2

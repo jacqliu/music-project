@@ -31,11 +31,11 @@ from kivy.core.image import Image
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
 # wav_file = "../../mirror_mirror.wav"
-wav_file = "../../xion.wav"
-# wav_file = "../../kh_traverse_town.wav"
+# wav_file = "../../xion.wav"
+wav_file = "../../kh_traverse_town.wav"
 # gems_path = "../../mirror_mirror_gems.txt"
-gems_path = "../../xion.txt"
-# gems_path = "../../kh_traverse_town_gems.txt"
+# gems_path = "../../xion.txt"
+gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
 
 heart_path = "particle/heart.png"
@@ -87,6 +87,10 @@ class MainWidget(BaseWidget) :
         self.trigger_held = False
         self.press_pos = None
 
+        #cursor display
+        self.cursor_display = CursorDisplay()
+        self.objects.add(self.cursor_display)
+
         #trail display - must be before beat match display, otherwise will translate.... lol
         self.trail_display = TrailDisplay()
         self.objects.add(self.trail_display)
@@ -109,6 +113,9 @@ class MainWidget(BaseWidget) :
         elif keycode[1] == 'm':
             self.player.on_button_down(None, True)
 
+    def on_key_up(self, keycode):
+        pass
+
     #called by psmove, always called three at a time
     def ps_on_touch_down(self, pos, move_button_down):
         self.player.on_button_down(pos, move_button_down)
@@ -128,9 +135,6 @@ class MainWidget(BaseWidget) :
 
     def on_touch_up(self, touch):
         self.player.on_button_up(touch.pos)
-
-    def on_key_up(self, keycode):
-        pass
         
     def on_update(self):
         #getting data form psmove. Trigger presses and releases are events, otherwise vals will be [0, 0].
@@ -142,7 +146,7 @@ class MainWidget(BaseWidget) :
             (vals, [x, y], radius) = pickle.loads(p) #data from test.py
             
             #print "Message received:", pickle.loads(p)
-            
+
             #normalize x and y
             if y > 500: #y actually has an upper and lower bound
                 y = 500
@@ -150,6 +154,9 @@ class MainWidget(BaseWidget) :
             y = (500-y)/500.0 #reverse direction
             pos = [x*Window.height + 100, y*Window.height] #so technically there is a bounding box... but if x exceeds expectations, that's ok too  
             #print pos
+
+            #update cursor location
+            self.cursor_display.pos = pos
 
             #button action control
             if vals[0] == TRIGGER_VAL: #press down trigger
@@ -367,6 +374,19 @@ class HealthDisplay(InstructionGroup):
         self.health_left += 100*frac
         self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
         self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
+
+class CursorDisplay(InstructionGroup):
+    def __init__(self):
+        super(CursorDisplay, self).__init__()
+        self.pos = (0, 0)
+        self.cursor = CEllipse(cpos = self.pos, size = (15, 15), segments = 40)
+        self.color = Color(hsv = cyan)
+
+        self.add(self.color)
+        self.add(self.cursor)
+
+    def on_update(self, dt):
+        self.cursor.cpos = self.pos
 
 # Displays all game elements: Nowbar, Buttons, BarLines, Gems.
 # scrolls the gem display.
