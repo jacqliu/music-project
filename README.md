@@ -6,6 +6,11 @@ TODO:
 
 -mark as wrong/make nodes disappear after one measure passes since last click
 -try Kivy 3-D
+-put shapes in the center
+-doing animations for pushing (getting rid of timers)
+-pulsing background
+-add play screen
+-add end screen of song
 
 
 How to play:
