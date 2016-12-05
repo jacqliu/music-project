@@ -6,7 +6,6 @@ TODO:
 
 -mark as wrong/make nodes disappear after one measure passes since last click
 -try Kivy 3-D
--make sure passed gems can't be hit
 
 
 How to play:

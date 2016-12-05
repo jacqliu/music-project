@@ -438,6 +438,10 @@ class BeatMatchDisplay(InstructionGroup):
     def gem_hit(self, gem_idx):
         self.gems[gem_idx].on_hit()
 
+    # called by Player. Checks if gem exists and can be hit.
+    def gem_here(self, gem_idx):
+    	return self.gems[gem_idx].here
+
     # called by Player. Causes the right thing to happen
     def gem_pass(self, gem_idx):
         self.gems[gem_idx].on_pass()
@@ -498,7 +502,7 @@ class Player(object):
 
         self.display.on_button_down(hit, coords)
         
-        if hit:
+        if hit and self.display.gem_here(idx):
             self.trail_display.on_touch_down(pos, push)
 
             # start playing solo again if hit
