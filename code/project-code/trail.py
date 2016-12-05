@@ -9,7 +9,7 @@ from kivy.uix.label import Label
 from kivy.core.window import Window
 
 import numpy as np
-from gfxutil import *
+from common.gfxutil import *
 
 color_map = {'c': magenta, 't': lime, 's': blue, 'd': cyan, 'x': purple}
 

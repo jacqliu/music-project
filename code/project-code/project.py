@@ -9,8 +9,8 @@ from common.wavegen import *
 from common.wavesrc import *
 from common.gfxutil import *
 from common.note import *
-from common.trail import *
-from common.displays import *
+from trail import *
+from displays import *
 
 from kivy.graphics.instructions import InstructionGroup, VertexInstruction
 from kivy.graphics import Color, Ellipse, Line, Rectangle
@@ -37,7 +37,8 @@ wav_file = "../../kh_traverse_town.wav"
 # gems_path = "../../xion.txt"
 gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
-bg_source = "../../background.png"
+#bg_source = "../../background.png"
+bg_source = "../../landscape.jpg"
 
 heart_path = "particle/heart.png"
 circle_path = 'particle/circle.png'

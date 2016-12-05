@@ -1,3 +1,5 @@
+########## Additional displays especially for SpellBinder ###########
+
 import sys
 sys.path.append('..')
 from common.core import *
@@ -6,7 +8,6 @@ from common.gfxutil import *
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.core.image import Image
 
-#additional displays specifically for SpellBinder
 class BGWidget(BaseWidget):
     def __init__(self, bg_source):
         super(BGWidget, self).__init__()
@@ -43,7 +44,7 @@ class CursorDisplay(InstructionGroup):
         super(CursorDisplay, self).__init__()
         self.pos = (0, 0)
         self.cursor = CEllipse(cpos = self.pos, size = (15, 15), segments = 40)
-        self.color = Color(hsv = cyan)
+        self.color = Color(hsv = gold)
 
         self.add(self.color)
         self.add(self.cursor)
