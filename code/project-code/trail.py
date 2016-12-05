@@ -93,6 +93,8 @@ class TrailDisplay(InstructionGroup):
     def on_update(self, dt):
         self.timer_push -= dt
         self.timer_miss -= dt
+
+
         if self.timer_push < 0 or self.timer_miss < 0:
             ####### CLEAR OBJECTS SUPER IMPORTANT ########
             for o in (self.objs+self.waste_objs+self.waste_objs_x):
@@ -101,6 +103,9 @@ class TrailDisplay(InstructionGroup):
             self.waste_objs = []
             self.waste_objs_x = []
             self.color.h, self.color.s, self.color.v = gold
+
+        if len(self.objs) > 10 and self.timer_miss > .15:
+            self.on_miss()
 
     def possible_types_object(self):
         #circle detection
