@@ -425,15 +425,11 @@ class BeatMatchDisplay(InstructionGroup):
             if letter in ['c', 't', 's', 'd', 'x']:
                 self.add_shape(letter, pos)
                 self.shapes_count += 1
-                # text = Image(heart_path).texture
-                # self.add(Rectangle(texture=text, pos=pos, size=(20, 20)))
-                # self.add(VertexInstruction(source=heart_path, pos=pos, size=(50, 50)))
 
     def add_shape(self, letter, pos):
         shape_map = {'c':circle_path, 't':triangle_path, 's': square_path, 'd': diamond_path, 'x': x_path}
         text = Image(shape_map[letter]).texture
-        # text = Image(heart_path).texture
-        # print text
+        
         self.add(Color(hsv = color_map[letter])) #set color of thing. Color_map comes from trail.py
         self.add(Rectangle(texture=text, pos=(pos[0]-11, pos[1]-40), size=(20, 20), color=cyan))
         self.add(self.color) #set back to original
@@ -441,6 +437,10 @@ class BeatMatchDisplay(InstructionGroup):
     # called by Player. Causes the right thing to happen
     def gem_hit(self, gem_idx):
         self.gems[gem_idx].on_hit()
+
+    # called by Player. Checks if gem exists and can be hit.
+    def gem_here(self, gem_idx):
+    	return self.gems[gem_idx].here
 
     # called by Player. Causes the right thing to happen
     def gem_pass(self, gem_idx):
@@ -479,9 +479,6 @@ class Player(object):
         self.gem_data = self.song.get_gems()
         self.barlines_data = self.song.get_barlines()
 
-        # if need muting
-        self.keeper = 0
-
         # score mechanics
         self.score = 0
         self.streak = 0
@@ -505,11 +502,11 @@ class Player(object):
 
         self.display.on_button_down(hit, coords)
         
-        if hit:
+        if hit and self.display.gem_here(idx):
             self.trail_display.on_touch_down(pos, push)
 
             # start playing solo again if hit
-            #self.audio_ctrl.set_mute(False)
+            # self.audio_ctrl.set_mute(False)
             self.display.gem_hit(idx)
 
             # score mechanics
@@ -524,9 +521,8 @@ class Player(object):
 
             self.trail_display.on_miss()
 
-            #score mechanics
-            self.streak = 0
-            self.bonus = 1
+            # score mechanics, reset streak and bonus
+            self.reset_score_mechanics()
 
     #called by MainWidget
     def on_trigger_hold(self, pos):
@@ -542,6 +538,11 @@ class Player(object):
         if shape:
             self.display.shapes_count = max(5, self.display.shapes_count) #so we can play unauthored ones too
             self.display.health.on_hit(1./self.display.shapes_count)
+
+    # reset score mechanics if gem is missed
+    def reset_score_mechanics(self):
+        self.streak = 0
+        self.bonus = 1
 
     # needed to check if for pass gems (ie, went past the slop window)
     def on_update(self):
@@ -561,7 +562,6 @@ class Player(object):
                 #self.audio_ctrl.set_mute(True)
 
                 # reset score mechanics
-                self.streak = 0
-                self.bonus = 1
+                self.reset_score_mechanics()
 
 run(MainWidget)
