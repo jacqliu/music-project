@@ -15,15 +15,15 @@ from kivy.graphics import Rectangle, Ellipse, Color, Fbo, ClearBuffers, ClearCol
 from kivy.graphics import PushMatrix, PopMatrix, Scale, Callback
 from kivy.graphics.texture import Texture
 from kivy.uix.label import Label
-#from kivy.core.window import Window
+# from kivy.core.window import Window
 #size of Yuge's computer
 class Window():
     def __init__(self, size):
         self.width = size[0]
         self.height = size[1]
 
-Window = Window((1440, 851)) #Yuge's computer's window size
-#Window = Window((800, 600)) #standard Kivy size
+#Window = Window((1440, 851)) #Yuge's computer's window size
+Window = Window((800, 600)) #standard Kivy size
 
 import numpy as np
 
