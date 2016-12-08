@@ -9,22 +9,27 @@ from kivy.uix.label import Label
 from kivy.core.window import Window
 
 import numpy as np
+import random
 from common.gfxutil import *
-
-color_map = {'c': magenta, 't': lime, 's': blue, 'd': cyan, 'x': purple}
 
 class TrailDisplay(InstructionGroup):
     def __init__(self): #callback function takes in which shape was created
         super(TrailDisplay, self).__init__()
         self.callback = None
-        self.timer_push = 1000
-        self.timer_miss = 1000
+        # self.timer_push = 1000
+        # self.timer_miss = 1000
+        self.push = False
+        self.miss = False
+        self.miss_particle = None
         self.color = Color(hsv=gold) #base color of every node
         self.add(self.color)
 
+        #trail objects
         self.objs = []
         self.waste_objs = [] #not certain how many this holds...
         self.waste_objs_x = [] #just for the second one in x's
+
+        self.spells = []
 
         self.shapes = {'triangle': 0, 'square': 0, 'diamond': 0, 'x': 0, 'circle': 0}
 
@@ -32,13 +37,16 @@ class TrailDisplay(InstructionGroup):
     def on_touch_down(self, pos, push):
         #draw shapes, game logic
         if not push:
-            self.timer_miss = 100
-            self.timer_push = 100
+            # self.timer_miss = 100
+            # self.timer_push = 100
+            self.miss = False
+            self.push = False
             new = CEllipse(cpos = pos, size = (30, 30), segments = 40)
             self.add(new)
             self.objs.append(new)
         else:
             self.timer_push = .2
+            self.push = True
             if self.objs and len(self.waste_objs_x) < 5 and len(self.waste_objs) < 5: #len 2 is special case for X
                 lines = []
                 for i in range(len(self.objs)-1):
@@ -58,22 +66,10 @@ class TrailDisplay(InstructionGroup):
             shape = self.possible_types_object()
             if shape:
                 self.shapes[shape] += 1
-                self.callback(shape)
+                self.callback(shape, list(self.objs)) #modifies health, can also be used for game logic
             else:
                 self.on_miss()
             print shape
-
-            if shape == 'triangle':
-                self.color.h, self.color.s, self.color.v = color_map['t']
-            elif shape == 'square':
-                self.color.h, self.color.s, self.color.v = color_map['s']
-            elif shape == 'diamond':
-                self.color.h, self.color.s, self.color.v = color_map['d']
-            elif shape == 'circle':
-                self.color.h, self.color.s, self.color.v = color_map['c']
-            elif shape == 'x':
-                self.color.h, self.color.s, self.color.v = color_map['x']
-
 
     def on_trigger_hold(self, pos):
         #special case for X
@@ -87,15 +83,17 @@ class TrailDisplay(InstructionGroup):
             self.waste_objs.append(new)
 
     def on_miss(self):
-        self.color.h, self.color.s, self.color.v = red
-        self.timer_miss = .15
+        self.color.h, self.color.s, self.color.v = white
+        # if len(self.objs) != 0:
+        #     self.miss_particle = MissParticle(self.objs[0].pos)
+        #self.timer_miss = .15
+        self.miss = True
 
     def on_update(self, dt):
-        self.timer_push -= dt
-        self.timer_miss -= dt
+        # self.timer_push -= dt
+        # self.timer_miss -= dt
 
-
-        if self.timer_push < 0 or self.timer_miss < 0:
+        if self.push or self.miss: #self.timer_push < 0 or self.timer_miss < 0:
             ####### CLEAR OBJECTS SUPER IMPORTANT ########
             for o in (self.objs+self.waste_objs+self.waste_objs_x):
                 self.remove(o)
@@ -104,7 +102,7 @@ class TrailDisplay(InstructionGroup):
             self.waste_objs_x = []
             self.color.h, self.color.s, self.color.v = gold
 
-        if len(self.objs) > 10 and self.timer_miss > .15:
+        if len(self.objs) > 10 and self.miss == False:
             self.on_miss()
 
     def possible_types_object(self):
@@ -144,20 +142,11 @@ class TrailDisplay(InstructionGroup):
                 p2 = self.objs[1].cpos
                 p3 = self.objs[2].cpos
                 p4 = self.objs[3].cpos
-                #if not self.intersect(p1, p2, p3, p4): #and not self.intersect(p3, p4, p1, p2) and not self.intersect(p1, p4, p2, p3) and not self.intersect(p2, p3, p1, p4):
-                # numer = p1[0]*p2[1] + p2[0]*p3[1] + p3[0]*p4[1] + p4[0]*p1[1] - (p2[0]*p1[1] + p3[0]*p2[1] + p4[0]*p3[1] + p1[0]*p4[1])
-                # area = abs(numer/2.0)
-                # perimeter = pt_distance(p1, p2) + pt_distance(p2, p3) + pt_distance(p3, p4) + pt_distance(p4, p1)
-                # print area/perimeter, area, perimeter
-                # print "here"
-            # if area/perimeter > 10:
                 if self.on_the_same_axis(p1, p2) and self.on_the_same_axis(p2, p3) and self.on_the_same_axis(p3, p4) and self.on_the_same_axis(p4, p1):
                     return 'square'
-                elif self.on_the_same_axis(p1, p3) and self.on_the_same_axis(p2, p4) and not self.on_the_same_axis(p1, p2) and not self.on_the_same_axis(p3, p4):
+                elif self.on_the_same_axis(p1, p3) and self.on_the_same_axis(p2, p4) and not self.on_the_same_axis(p1, p2, 6.0) and not self.on_the_same_axis(p3, p4, 6.0):
                     return 'diamond'
 
-
-                
 
     #checks every point in order of creation to make sure they're close enough to each other
     def close_enough(self, points, ratio): #smaller ratio requires points to be closer together
@@ -175,8 +164,8 @@ class TrailDisplay(InstructionGroup):
 
         return True
 
-    def on_the_same_axis(self, p1, p2):
-        ratio = pt_distance(p1, p2)/2.0 #smaller denominator means user can be more off
+    def on_the_same_axis(self, p1, p2, ratio = 2.0):
+        ratio = pt_distance(p1, p2)/ratio #smaller denominator means user can be more off
         return (abs(p1[0] - p2[0]) < ratio or abs(p1[1] - p2[1]) < ratio)
 
     #checks if p3 and p4 are on opposite sides of the line drawn by p1 and p2
@@ -197,25 +186,13 @@ class TrailDisplay(InstructionGroup):
             new += key + ': ' + str(self.shapes[key]) + '\n'
         return new
 
-class Node(InstructionGroup):
+class MissParticle(InstructionGroup):
     def __init__(self, pos):
-        super(Node, self).__init__()
-        self.pos = pos
-        self.circle = CEllipse(cpos = pos, size = (30, 30), segments = 40)
-        self.add(self.circle)
-
-        self.disappear = False
-
-    def on_update(self, dt):
-        if self.disappear:
-            return False
-
-class TrailLine(InstructionGroup):
-    def __init__(self, pts):
-        super(TrailLine, self).__init__()
-        self.points = pts
-        self.line = Line(points=self.points)
-        self.add(self.line)
+        super(MissParticle, self).__init__()
+        self.parts = []
+        for i in range(10):
+            part = CEllipse(cpos = (random.randint(pos[0]-100, pos[0]+100), random.randint(pos[1]-100, pos[1]+100)), size = (10, 10), segments = 40)
+            self.add(part)
 
         self.disappear = False
 

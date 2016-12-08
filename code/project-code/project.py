@@ -31,11 +31,11 @@ from kivy.core.image import Image
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
 # wav_file = "../../mirror_mirror.wav"
-wav_file = "../../xion.wav"
-# wav_file = "../../kh_traverse_town.wav"
+# wav_file = "../../xion.wav"
+wav_file = "../../kh_traverse_town.wav"
 # gems_path = "../../mirror_mirror_gems.txt"
-gems_path = "../../xion.txt"
-# gems_path = "../../kh_traverse_town_gems.txt"
+# gems_path = "../../xion.txt"
+gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
 bg_source = "../../background.png"
 # bg_source = "../../landscape.jpg"
@@ -47,8 +47,8 @@ triangle_path = 'particle/triangle.png'
 diamond_path = 'particle/diamond.png'
 x_path = 'particle/x.png'
 
-MOVE_BUTTON_VAL = 524288
-TRIGGER_VAL = 1048576
+MOVE_BUTTON_VAL = 1048576
+TRIGGER_VAL = 524288
 TRIANGLE_VAL = 16
 
 time_len = 200
@@ -97,20 +97,24 @@ class MainWidget(BaseWidget) :
         # self.bg_display = BGDisplay()
         # self.objects.add(self.bg_display)
 
+        #trail display - must be before beat match display, otherwise will translate.... lol
+        self.trail_display = TrailDisplay()
+        self.objects.add(self.trail_display)
+
         #cursor display
         self.cursor_display = CursorDisplay()
         self.objects.add(self.cursor_display)
 
-        #trail display - must be before beat match display, otherwise will translate.... lol
-        self.trail_display = TrailDisplay()
-        self.objects.add(self.trail_display)
+        #make spells
+        self.spells = SpellDisplay()
+        self.objects.add(self.spells)
 
         # display
         self.display = BeatMatchDisplay(gem_data, barlines_data, self.ps)
         self.objects.add(self.display)
 
         # player
-        self.player = Player(self.song, self.display, self.audioctrl, self.trail_display)
+        self.player = Player(self.song, self.display, self.audioctrl, self.trail_display, self.spells)
 
         self.paused = True
 
@@ -206,6 +210,27 @@ class MainWidget(BaseWidget) :
             self.objects.on_update()
         else:
             self.info.text += '\n\nPress triangle to start!'
+
+        #end game screen
+        if len(self.audioctrl.mixer.generators) == 0:
+            #add shape score
+            for shape in self.trail_display.shapes.keys():
+                if shape == "triangle":
+                    self.player.score += 400
+                elif shape == "circle":
+                    self.player.score += 800
+                elif shape == "x":
+                    self.player.score += 600
+                elif shape == "square" or shape == "diamond":
+                    self.player.score += 700
+
+            self.canvas.clear()
+            l = Label(text = "text", halign='left', valign='middle', font_size='20sp',
+              pos=(Window.width * 0.5, Window.height * 0.4),
+              text_size=(Window.width, Window.height))
+            self.add_widget(l)
+            l.text ='streak: %d' % self.player.max_streak
+            l.text += "\ntotal score: %d" % (self.player.max_streak*self.player.score)
 
 
 
@@ -467,12 +492,14 @@ class BeatMatchDisplay(InstructionGroup):
 # Handles game logic and keeps score.
 # Controls the display and the audio
 class Player(object):
-    def __init__(self, song, display, audio_ctrl, trail_display):
+    def __init__(self, song, display, audio_ctrl, trail_display, spell_display):
         super(Player, self).__init__()
 
         self.display = display
         self.trail_display = trail_display
         self.trail_display.callback = self.cast_spell
+        self.spells = spell_display
+
         self.audio_ctrl = audio_ctrl
 
         self.song = song
@@ -480,6 +507,7 @@ class Player(object):
         self.barlines_data = self.song.get_barlines()
 
         # score mechanics
+        self.max_streak  =0
         self.score = 0
         self.streak = 0
         self.bonus = 1
@@ -513,6 +541,7 @@ class Player(object):
             self.streak += 1
             self.score += self.bonus * 100
             self.bonus = self.streak / 10 + 1
+            self.max_streak = max(self.streak, self.max_streak)
         else:
             # if hit is in the wrong lane, pass the gem and play sound
             if idx != None:
@@ -534,10 +563,13 @@ class Player(object):
         #self.trail_display.on_touch_up()
 
     #determines how much damage is done
-    def cast_spell(self, shape):
+    def cast_spell(self, shape, nodes):
         if shape:
+            #modifies health bar
             self.display.shapes_count = max(5, self.display.shapes_count) #so we can play unauthored ones too
             self.display.health.on_hit(1./self.display.shapes_count)
+            #creates spell animation
+            self.spells.make_spell(shape, nodes)
 
     # reset score mechanics if gem is missed
     def reset_score_mechanics(self):

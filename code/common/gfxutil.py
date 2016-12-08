@@ -22,8 +22,8 @@ class Window():
         self.width = size[0]
         self.height = size[1]
 
-#Window = Window((1440, 851)) #Yuge's computer's window size
-Window = Window((800, 600)) #standard Kivy size
+Window = Window((1440, 851)) #Yuge's computer's window size
+# Window = Window((800, 600)) #standard Kivy size
 
 import numpy as np
 
@@ -38,6 +38,8 @@ purple = (.8, 1, 1)
 magenta = (.9, 1, 1)
 #colors = [red, orange, yellow, lime, green, cyan, blue]
 white = (0,0,1)
+
+color_map = {'c': magenta, 't': lime, 's': blue, 'd': cyan, 'x': purple}
 
 # return a Label object configured to look good and be positioned at
 # the top-left of the screen
