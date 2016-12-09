@@ -28,16 +28,20 @@ import pickle
 from kivy.core.image import Image
 
 # appropriate files
+traverse_town = ("../../kh_traverse_town.wav", "../../kh_traverse_town_gems.txt", "../../background.png")
+mirror_mirror = ("../../mirror_mirror.wav", "../../mirror_mirror_gems.txt", "../../background.png")
+xion = ("../../xion.wav", "../../xion.txt", "../../background.png")
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
 # wav_file = "../../mirror_mirror.wav"
 # wav_file = "../../xion.wav"
-wav_file = "../../kh_traverse_town.wav"
+#wav_file = "../../kh_traverse_town.wav"
 # gems_path = "../../mirror_mirror_gems.txt"
 # gems_path = "../../xion.txt"
-gems_path = "../../kh_traverse_town_gems.txt"
+#gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
-bg_source = "../../background.png"
+start_bg = "../../landscape.jpg"
+#bg_source = "../../background.png"
 # bg_source = "../../landscape.jpg"
 
 heart_path = "particle/heart.png"
@@ -62,12 +66,52 @@ socket.bind("tcp://*:5555")
 class MainWidget(BaseWidget) :
     def __init__(self):
         super(MainWidget, self).__init__()
+        # audio controller
+        self.audioctrl = None
+        # background
+        self.background = BGWidget(start_bg)
+        self.add_widget(self.background)
+
+        # text
+        # self.info = topleft_label()
+        # self.add_widget(self.info)
+
+        # keep track of objects
+        self.objects = None
+        # keep track of song and data
+        self.song = None
+        # particle system
+        self.ps = None
+        #psmove
+        self.data = None
+        self.trigger_held = None
+        self.press_pos = None
+        #trail display - must be before beat match display, otherwise will translate.... lol
+        self.trail_display = None
+        #cursor display
+        self.cursor_display = None
+        #make spells
+        self.spells = None
+        # display
+        self.display = None
+        # player
+        self.player = None
+
+        self.paused = True
+        self.playing = False
+
+        #start a level
+        #self.start_level(wav_file, gems_path, bg_source)
+
+    def start_level(self, wave_file, gems_path, background_img_src):
+        self.paused = True
+        self.canvas.clear()
 
         # audio controller
-        self.audioctrl = AudioController(wav_file)
+        self.audioctrl = AudioController(wave_file)
 
         # background
-        self.background = BGWidget(bg_source)
+        self.background = BGWidget(background_img_src)
         self.add_widget(self.background)
 
         # text for scoring
@@ -116,121 +160,136 @@ class MainWidget(BaseWidget) :
         # player
         self.player = Player(self.song, self.display, self.audioctrl, self.trail_display, self.spells)
 
-        self.paused = True
+        self.playing = True
 
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
         # pass
-        if keycode[1] == 'p':
-            self.paused = not self.paused
-
+        if keycode[1] == 't':
+            self.start_level(traverse_town[0], traverse_town[1], traverse_town[2])
+        elif keycode[1] == 'x':
+            self.start_level(xion[0], xion[1], xion[2])
         elif keycode[1] == 'm':
-            self.player.on_button_down(None, True)
+            self.start_level(mirror_mirror[0], mirror_mirror[1], mirror_mirror[2])
+
+        if self.playing: #should be able to eventually get rid of this line, or replace with something else
+            if keycode[1] == 'p':
+                self.paused = not self.paused
+
+            elif keycode[1] == 'm':
+                self.player.on_button_down(None, True)
+
 
     def on_key_up(self, keycode):
         pass
 
     #called by psmove, always called three at a time
     def ps_on_touch_down(self, pos, move_button_down):
-        self.player.on_button_down(pos, move_button_down)
+        if self.playing:
+            self.player.on_button_down(pos, move_button_down)
 
     def ps_on_touch_move(self, pos):
-        self.player.on_trigger_hold(pos)
+        if self.playing:
+            self.player.on_trigger_hold(pos)
 
     def ps_on_touch_up(self, pos):
-        self.player.on_button_up(pos)
+        if self.playing:
+            self.player.on_button_up(pos)
 
     #called by normal mouse and keyboard control
     def on_touch_down(self, touch):
-        self.player.on_button_down(touch.pos, False)
+        if self.playing:
+            self.player.on_button_down(touch.pos, False)
 
     def on_touch_move(self, touch):
-        self.player.on_trigger_hold(touch.pos)
+        if self.playing:
+            self.player.on_trigger_hold(touch.pos)
 
     def on_touch_up(self, touch):
-        self.player.on_button_up(touch.pos)
+        if self.playing:
+            self.player.on_button_up(touch.pos)
         
     def on_update(self):
         #getting data form psmove. Trigger presses and releases are events, otherwise vals will be [0, 0].
-        
-        try:
-            # Check for a message, this will not block
-            z = socket.recv(flags=zmq.NOBLOCK)
-            p = zlib.decompress(z)
-            (vals, [x, y], radius) = pickle.loads(p) #data from test.py
-            
-            #print "Message received:", pickle.loads(p)
+        if self.playing:
+            try:
+                # Check for a message, this will not block
+                z = socket.recv(flags=zmq.NOBLOCK)
+                p = zlib.decompress(z)
+                (vals, [x, y], radius) = pickle.loads(p) #data from test.py
+                
+                #print "Message received:", pickle.loads(p)
 
-            #normalize x and y
-            if y > 500: #y actually has an upper and lower bound
-                y = 500
-            x = x/600.0
-            y = (500-y)/500.0 #reverse direction
-            pos = [x*Window.height + 100, y*Window.height] #so technically there is a bounding box... but if x exceeds expectations, that's ok too  
-            #print pos
+                #normalize x and y
+                if y > 500: #y actually has an upper and lower bound
+                    y = 500
+                x = x/600.0
+                y = (500-y)/500.0 #reverse direction
+                pos = [x*Window.height + 100, y*Window.height] #so technically there is a bounding box... but if x exceeds expectations, that's ok too  
+                #print pos
 
-            #update cursor location
-            self.cursor_display.pos = pos
+                #update cursor location
+                self.cursor_display.pos = pos
 
-            #button action control
-            if vals[0] == TRIGGER_VAL: #press down trigger
-                self.ps_on_touch_down(pos, False)
-                self.trigger_held = True
-                self.press_pos = pos
-            elif vals[1] == TRIGGER_VAL:
-                self.press_pos = None
-                self.trigger_held = False
-                    
-            elif vals[0] == MOVE_BUTTON_VAL: #press down move button
-                self.ps_on_touch_down(pos, True)
+                #button action control
+                if vals[0] == TRIGGER_VAL: #press down trigger
+                    self.ps_on_touch_down(pos, False)
+                    self.trigger_held = True
+                    self.press_pos = pos
+                elif vals[1] == TRIGGER_VAL:
+                    self.press_pos = None
+                    self.trigger_held = False
+                        
+                elif vals[0] == MOVE_BUTTON_VAL: #press down move button
+                    self.ps_on_touch_down(pos, True)
 
-            elif vals[0] == 0:
-                self.ps_on_touch_up(pos)
+                elif vals[0] == 0:
+                    self.ps_on_touch_up(pos)
 
-            elif vals[0] == TRIANGLE_VAL:
-                self.paused = not self.paused
+                elif vals[0] == TRIANGLE_VAL:
+                    self.paused = not self.paused
 
-            #decide if trigger was being held
-            if self.trigger_held and self.press_pos != None:
-                if pt_distance(pos, self.press_pos) > 60: #threshold for movement to be considered a hold
-                    self.ps_on_touch_move(pos)
+                #decide if trigger was being held
+                if self.trigger_held and self.press_pos != None:
+                    if pt_distance(pos, self.press_pos) > 60: #threshold for movement to be considered a hold
+                        self.ps_on_touch_move(pos)
 
-        except zmq.Again as e:
-            pass
+            except zmq.Again as e:
+                pass
 
-        #display text
-        self.info.text = '\n\n\nScore: '+ str(self.player.score)
-        self.info.text += '\nGenerators: ' + str(len(self.objects.objects))
-        self.info.text += '\nStreak: ' + str(self.player.streak)
-        self.info.text += '\nBonus: ' + str(self.player.bonus) + 'x \n\n'
-        self.info.text += str(self.trail_display)
+            #display text
+            self.info.text = '\n\n\nScore: '+ str(self.player.score)
+            self.info.text += '\nGenerators: ' + str(len(self.objects.objects))
+            self.info.text += '\nStreak: ' + str(self.player.streak)
+            self.info.text += '\nBonus: ' + str(self.player.bonus) + 'x \n\n'
+            self.info.text += str(self.trail_display)
 
-        if not self.paused:
-            self.player.on_update()
-            self.objects.on_update()
-        else:
-            self.info.text += '\n\nPress triangle to start!'
+            if not self.paused:
+                self.player.on_update()
+                self.objects.on_update()
+            else:
+                self.info.text += '\n\nPress triangle to start!'
 
-        #end game screen
-        if len(self.audioctrl.mixer.generators) == 0:
-            #add shape score
-            for shape in self.trail_display.shapes.keys():
-                if shape == "triangle":
-                    self.player.score += 400
-                elif shape == "circle":
-                    self.player.score += 800
-                elif shape == "x":
-                    self.player.score += 600
-                elif shape == "square" or shape == "diamond":
-                    self.player.score += 700
+            #end game screen
+            if len(self.audioctrl.mixer.generators) == 0:
+                #add shape score
+                for shape in self.trail_display.shapes.keys():
+                    if shape == "triangle":
+                        self.player.score += 400
+                    elif shape == "circle":
+                        self.player.score += 800
+                    elif shape == "x":
+                        self.player.score += 600
+                    elif shape == "square" or shape == "diamond":
+                        self.player.score += 700
 
-            self.canvas.clear()
-            l = Label(text = "text", halign='left', valign='middle', font_size='20sp',
-              pos=(Window.width * 0.5, Window.height * 0.4),
-              text_size=(Window.width, Window.height))
-            self.add_widget(l)
-            l.text ='streak: %d' % self.player.max_streak
-            l.text += "\ntotal score: %d" % (self.player.max_streak*self.player.score)
+                self.canvas.clear()
+                l = Label(text = "text", halign='left', valign='middle', font_size='20sp',
+                  pos=(Window.width * 0.5, Window.height * 0.4),
+                  text_size=(Window.width, Window.height))
+                self.add_widget(l)
+                l.text ='streak: %d' % self.player.max_streak
+                l.text += "\ntotal score: %d" % (self.player.max_streak*self.player.score)
 
 
 

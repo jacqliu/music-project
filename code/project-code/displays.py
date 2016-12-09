@@ -54,6 +54,7 @@ class CursorDisplay(InstructionGroup):
     def on_update(self, dt):
         self.cursor.cpos = self.pos
 
+#controls all Spell animations, including what should happen per shape made
 class SpellDisplay(InstructionGroup):
     def __init__(self):
         super(SpellDisplay, self).__init__()
@@ -89,16 +90,16 @@ class SpellDisplay(InstructionGroup):
         for s in to_remove:
             self.spells.remove(s)
 
-
+#a single Spell animation that has shape, color, and duration
 class Spell(InstructionGroup):
-    def __init__(self, shape, color = gold):#defaults to gold
+    def __init__(self, shape, color = gold, duration = 1):#defaults to gold
         super(Spell, self).__init__()
         self.shape = shape
         self.color = Color(hsv = color) 
         self.add(self.color)
         self.add(self.shape)
 
-        self.duration = 1
+        self.duration = duration
         self.fade_anim = KFAnim((0, 1), (self.duration, 0))
         self.time = 0
 

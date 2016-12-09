@@ -45,7 +45,7 @@ class TrailDisplay(InstructionGroup):
             self.add(new)
             self.objs.append(new)
         else:
-            self.timer_push = .2
+            #self.timer_push = .2
             self.push = True
             if self.objs and len(self.waste_objs_x) < 5 and len(self.waste_objs) < 5: #len 2 is special case for X
                 lines = []
@@ -62,7 +62,7 @@ class TrailDisplay(InstructionGroup):
             # else:
             #     print 'pushed without objects'
 
-            #categorize shapes
+            #categorize shapes, callback function to player
             shape = self.possible_types_object()
             if shape:
                 self.shapes[shape] += 1
@@ -84,8 +84,10 @@ class TrailDisplay(InstructionGroup):
 
     def on_miss(self):
         self.color.h, self.color.s, self.color.v = white
-        # if len(self.objs) != 0:
+        #TODO miss animation. Can't decide
+        # if len(self.objs) != 0: #
         #     self.miss_particle = MissParticle(self.objs[0].pos)
+        # self.add(self.miss_particle)
         #self.timer_miss = .15
         self.miss = True
 
