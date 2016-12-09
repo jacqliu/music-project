@@ -40,7 +40,7 @@ tmo_sfx = "../../sfx.txt"
 # gems_path = "../../xion.txt"
 #gems_path = "../../kh_traverse_town_gems.txt"
 barline_path = "../../mirror_mirror_gems.txt"
-start_bg = "../../landscape.jpg"
+start_bg = "../../start_screen.jpg"
 #bg_source = "../../background.png"
 # bg_source = "../../landscape.jpg"
 
@@ -169,7 +169,7 @@ class MainWidget(BaseWidget) :
             self.start_level(traverse_town[0], traverse_town[1], traverse_town[2])
         elif keycode[1] == 'x':
             self.start_level(xion[0], xion[1], xion[2])
-        elif keycode[1] == 'm':
+        elif keycode[1] == 'r':
             self.start_level(mirror_mirror[0], mirror_mirror[1], mirror_mirror[2])
 
         if self.playing: #should be able to eventually get rid of this line, or replace with something else
