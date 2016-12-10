@@ -22,8 +22,8 @@ class Window():
         self.width = size[0]
         self.height = size[1]
 
-#Window = Window((1440, 851)) #Yuge's computer's window size
-Window = Window((800, 600)) #standard Kivy size
+# Window = Window((1440, 851)) #Yuge's computer's window size
+Window = Window((900, 600)) #standard Kivy size
 
 import numpy as np
 
