@@ -31,6 +31,7 @@ from kivy.core.image import Image
 traverse_town = ("../../kh_traverse_town.wav", "../../kh_traverse_town_gems.txt", "../../background.png")
 mirror_mirror = ("../../mirror_mirror.wav", "../../mirror_mirror_gems.txt", "../../background.png")
 xion = ("../../xion.wav", "../../xion.txt", "../../background.png")
+canon = ("../../canon.wav", "../../canon_gems.txt", "../../background.png")
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
 # wav_file = "../../mirror_mirror.wav"
@@ -43,13 +44,6 @@ barline_path = "../../mirror_mirror_gems.txt"
 start_bg = "../../start_screen.jpg"
 #bg_source = "../../background.png"
 # bg_source = "../../landscape.jpg"
-
-heart_path = "particle/heart.png"
-circle_path = 'particle/circle.png'
-square_path = 'particle/square.png'
-triangle_path = 'particle/triangle.png'
-diamond_path = 'particle/diamond.png'
-x_path = 'particle/x.png'
 
 MOVE_BUTTON_VAL = 1048576
 TRIGGER_VAL = 524288
@@ -102,6 +96,13 @@ class MainWidget(BaseWidget) :
 
         #start a level
         #self.start_level(wav_file, gems_path, bg_source)
+    def start_screen(self):
+        self.canvas.clear()
+        self.playing = False
+        self.paused = True
+
+        self.background = BGWidget(start_bg)
+        self.add_widget(self.background)
 
     def start_level(self, wave_file, gems_path, background_img_src):
         self.paused = True
@@ -137,10 +138,6 @@ class MainWidget(BaseWidget) :
         self.trigger_held = False
         self.press_pos = None
 
-        #background display
-        # self.bg_display = BGDisplay()
-        # self.objects.add(self.bg_display)
-
         #trail display - must be before beat match display, otherwise will translate.... lol
         self.trail_display = TrailDisplay()
         self.objects.add(self.trail_display)
@@ -171,6 +168,8 @@ class MainWidget(BaseWidget) :
             self.start_level(xion[0], xion[1], xion[2])
         elif keycode[1] == 'r':
             self.start_level(mirror_mirror[0], mirror_mirror[1], mirror_mirror[2])
+        elif keycode[1] == 'c':
+            self.start_level(canon[0], canon[1], canon[2])
 
         if self.playing: #should be able to eventually get rid of this line, or replace with something else
             if keycode[1] == 'p':
@@ -178,6 +177,9 @@ class MainWidget(BaseWidget) :
 
             elif keycode[1] == 'm':
                 self.player.on_button_down(None, True)
+
+            elif keycode[1] == 's':
+                self.start_screen()
 
 
     def on_key_up(self, keycode):
@@ -473,7 +475,7 @@ class BeatMatchDisplay(InstructionGroup):
         self.button = ButtonDisplay(ps)
 
         #make health bar
-        self.health = HealthDisplay()
+        self.health = HealthDisplay(triangles = 5, xs = 3) #TODO replace with some actual metrics from gem_data
         self.add(self.health)
 
         # set up translation
@@ -626,7 +628,7 @@ class Player(object):
         if shape:
             #modifies health bar
             self.display.shapes_count = max(5, self.display.shapes_count) #so we can play unauthored ones too
-            self.display.health.on_hit(1./self.display.shapes_count)
+            self.display.health.on_hit(1./self.display.shapes_count, shape)
             #creates spell animation
             self.spells.make_spell(shape, nodes)
 

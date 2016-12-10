@@ -10,6 +10,14 @@ from kivy.core.image import Image
 
 circle_source = "circle_spell.png"
 
+heart_path = "particle/heart.png"
+circle_path = 'particle/circle.png'
+square_path = 'particle/square.png'
+triangle_path = 'particle/triangle.png'
+diamond_path = 'particle/diamond.png'
+x_path = 'particle/x.png'
+
+#Only for displaying Background images! Not interactive!
 class BGWidget(BaseWidget):
     def __init__(self, bg_source):
         super(BGWidget, self).__init__()
@@ -19,11 +27,14 @@ class BGWidget(BaseWidget):
     def on_update(self):
     	pass
 
+#For displaying health and anything related to the progress of the game. Updates with score.
 class HealthDisplay(InstructionGroup):
-    def __init__(self):
+    def __init__(self, triangles = 0, squares = 0, diamonds = 0, xs = 0, circles = 0):
         super(HealthDisplay, self).__init__()
         self.health_left = 100.0
+        # self.shapes = [Rectangle(pos=pos, size=(Window.height/4, Window.height/4), source = "../")]
 
+        #health bar display
         self.health_bar = Line(points = [0, Window.height, Window.width*self.health_left/100.0, Window.height], width = 30, cap = 'none')
         self.damage_bar = Line(points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height], width = 30, cap = 'none')
         self.add(Color(hsv = yellow))
@@ -31,16 +42,23 @@ class HealthDisplay(InstructionGroup):
         self.add(Color(hsv = lime))
         self.add(self.damage_bar)
 
-    def on_hit(self, frac):
+        #progress display
+        # if triangles != 0:
+        #     shape = Rectangle(pos=, size=(Window.height/4, Window.height/4), source = circle_path)
+            
+
+
+    def on_hit(self, frac, shape):
         self.health_left -= 100*frac
         self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
         self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
 
-    def on_gain(self, frac):
+    def on_gain(self, frac, shape):
         self.health_left += 100*frac
         self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
         self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
 
+#For any display related to the movement of the cursor.
 class CursorDisplay(InstructionGroup):
     def __init__(self):
         super(CursorDisplay, self).__init__()
@@ -51,7 +69,17 @@ class CursorDisplay(InstructionGroup):
         self.add(self.color)
         self.add(self.cursor)
 
+        #additional cursor animations
+        self.sparkles = []
+
     def on_update(self, dt):
+        # for i in range(int(self.cursor.cpos[0]), int(self.pos[0])): #just a random sparkle generator
+        #     sparkle = Spell(CEllipse(cpos = (i, random.randint(self.cursor.cpos[1], self.pos[1])), size = (3, 3), segments = 40))
+        #     self.add(sparkle)
+        # for s in self.sparkles:
+        #     if s.on_update(dt) == False:
+        #         self.remove(s)
+
         self.cursor.cpos = self.pos
 
 #controls all Spell animations, including what should happen per shape made

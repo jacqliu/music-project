@@ -149,7 +149,6 @@ class TrailDisplay(InstructionGroup):
                 elif self.on_the_same_axis(p1, p3) and self.on_the_same_axis(p2, p4) and not self.on_the_same_axis(p1, p2, 6.0) and not self.on_the_same_axis(p3, p4, 6.0):
                     return 'diamond'
 
-
     #checks every point in order of creation to make sure they're close enough to each other
     def close_enough(self, points, ratio): #smaller ratio requires points to be closer together
         prior_dist = None
