@@ -66,6 +66,9 @@ socket.bind("tcp://*:5555")
 class MainWidget(BaseWidget) :
     def __init__(self):
         super(MainWidget, self).__init__()
+        # keep track of if game is over
+        self.end = False
+        
         # audio controller
         self.audioctrl = None
         # background
@@ -271,17 +274,19 @@ class MainWidget(BaseWidget) :
                 self.info.text += '\n\nPress triangle to start!'
 
             #end game screen
-            if len(self.audioctrl.mixer.generators) == 0:
+            if len(self.audioctrl.mixer.generators) == 0 and not self.end:
                 #add shape score
-                for shape in self.trail_display.shapes.keys():
-                    if shape == "triangle":
-                        self.player.score += 400
-                    elif shape == "circle":
-                        self.player.score += 800
-                    elif shape == "x":
-                        self.player.score += 600
-                    elif shape == "square" or shape == "diamond":
-                        self.player.score += 700
+                if not self.end:
+                    self.end = True
+                    for shape in self.trail_display.shapes.keys():
+                        if shape == "triangle":
+                            self.player.score += 400
+                        elif shape == "circle":
+                            self.player.score += 800
+                        elif shape == "x":
+                            self.player.score += 600
+                        elif shape == "square" or shape == "diamond":
+                            self.player.score += 700
 
                 self.canvas.clear()
                 l = Label(text = "text", halign='left', valign='middle', font_size='20sp',
