@@ -23,7 +23,10 @@ class Window():
         self.height = size[1]
 
 # Window = Window((1440, 851)) #Yuge's computer's window size
-Window = Window((900, 600)) #standard Kivy size
+# Window = Window((900, 600)) #standard Kivy size
+
+from kivy.core.window import Window
+Window.fullscreen = True
 
 import numpy as np
 
