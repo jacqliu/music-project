@@ -16,6 +16,7 @@ from kivy.graphics.instructions import InstructionGroup, VertexInstruction
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics import PushMatrix, PopMatrix, Translate, Scale, Rotate
 from kivy.clock import Clock as kivyClock
+from kivy.config import Config
 from common.kivyparticle import ParticleSystem
 
 import random
@@ -109,6 +110,7 @@ class MainWidget(BaseWidget) :
 
     def start_level(self, wave_file, gems_path, background_img_src):
         self.paused = True
+        self.end = False
         self.canvas.clear()
 
         # audio controller
@@ -276,19 +278,20 @@ class MainWidget(BaseWidget) :
                 self.info.text += '\n\nPress triangle to start!'
 
             #end game screen
+            self.player.score = 0
             if len(self.audioctrl.mixer.generators) == 0 and not self.end:
                 #add shape score
                 if not self.end:
                     self.end = True
                     for shape in self.trail_display.shapes.keys():
                         if shape == "triangle":
-                            self.player.score += 400
+                            self.player.score += 300*self.trail_display.shapes[shape]
                         elif shape == "circle":
-                            self.player.score += 800
+                            self.player.score += 400*self.trail_display.shapes[shape]
                         elif shape == "x":
-                            self.player.score += 600
+                            self.player.score += 400*self.trail_display.shapes[shape]
                         elif shape == "square" or shape == "diamond":
-                            self.player.score += 700
+                            self.player.score += 500*self.trail_display.shapes[shape]
 
                 self.canvas.clear()
                 l = Label(text = "text", halign='left', valign='middle', font_size='20sp',
@@ -296,7 +299,7 @@ class MainWidget(BaseWidget) :
                   text_size=(Window.width, Window.height))
                 self.add_widget(l)
                 l.text ='streak: %d' % self.player.max_streak
-                l.text += "\ntotal score: %d" % (self.player.max_streak*self.player.score)
+                l.text += "\ntotal score: %d" % (self.player.score)
 
 
 
@@ -662,4 +665,6 @@ class Player(object):
                 # reset score mechanics
                 self.reset_score_mechanics()
 
+#Config.set('graphics', 'fullscreen', 1)
+#Window.fullscreen = True
 run(MainWidget)

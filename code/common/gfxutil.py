@@ -15,7 +15,7 @@ from kivy.graphics import Rectangle, Ellipse, Color, Fbo, ClearBuffers, ClearCol
 from kivy.graphics import PushMatrix, PopMatrix, Scale, Callback
 from kivy.graphics.texture import Texture
 from kivy.uix.label import Label
-# from kivy.core.window import Window
+from kivy.core.window import Window
 #size of Yuge's computer
 # class Window():
 #     def __init__(self, size):
@@ -25,8 +25,6 @@ from kivy.uix.label import Label
 # Window = Window((1440, 851)) #Yuge's computer's window size
 # Window = Window((900, 600)) #standard Kivy size
 
-from kivy.core.window import Window
-Window.fullscreen = True
 
 import numpy as np
 
