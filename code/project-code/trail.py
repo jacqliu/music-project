@@ -62,7 +62,7 @@ class TrailDisplay(InstructionGroup):
 
             self.miss = False
             self.push = False
-            new = CEllipse(cpos = anim.eval(self.time), size = (30, 30), segments = 40)
+            new = CRectangle(cpos = anim.eval(self.time), size = (50, 50), source="node.png") #CEllipse(cpos = anim.eval(self.time), size = (30, 30), segments = 40)
             self.add(new)
             self.objs.append(new)
             self.anims[new] = anim

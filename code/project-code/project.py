@@ -28,10 +28,10 @@ import pickle
 from kivy.core.image import Image
 
 # appropriate files
-traverse_town = ("../../kh_traverse_town.wav", "../../kh_traverse_town_gems.txt", "../../background.png", "Traverse Town - Kingdom Hearts")
-mirror_mirror = ("../../mirror_mirror.wav", "../../mirror_mirror_gems.txt", "../../background.png", "Mirror Mirror - RWBY")
-xion = ("../../xion.wav", "../../xion.txt", "../../background.png", "Xion's Theme - Kingdom Hearts")
-canon = ("../../canon.wav", "../../canon_gems.txt", "../../background.png", "Pachelbel's Canon")
+traverse_town = ("../../kh_traverse_town.wav", "../../kh_traverse_town_gems.txt", "../../traverse_bg.jpg", "Traverse Town - Kingdom Hearts")
+mirror_mirror = ("../../mirror_mirror.wav", "../../mirror_mirror_gems.txt", "../../mirror_bg.jpg", "Mirror Mirror - RWBY")
+xion = ("../../xion.wav", "../../xion.txt", "../../xion_bg.jpg", "Xion's Theme - Kingdom Hearts")
+canon = ("../../canon.wav", "../../canon_gems.txt", "../../canon_bg.jpg", "Pachelbel's Canon")
 levels = [traverse_town, mirror_mirror, xion, canon]
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
@@ -98,6 +98,7 @@ class MainWidget(BaseWidget) :
         #start a level
         #self.start_level(wav_file, gems_path, bg_source)
     def start_screen(self):
+        self.dead = False
         self.canvas.clear()
         self.playing = False
         self.paused = True
@@ -121,6 +122,7 @@ class MainWidget(BaseWidget) :
         now_bar_width = (lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
         redraw_window()
 
+        self.dead = False
         self.paused = True
         self.end = False
         self.canvas.clear()
@@ -204,7 +206,7 @@ class MainWidget(BaseWidget) :
 
 
     def on_key_up(self, keycode):
-        if keycode[1] == 'm':
+        if keycode[1] == 'm' and self.playing:
             self.player.on_button_up(0)
 
     #called by psmove
@@ -708,7 +710,7 @@ class Player(object):
             #modifies health bar
             self.display.shapes_count = max(5, self.display.shapes_count) #so we can play unauthored ones too
             if shape == "miss":
-                self.display.health.on_miss(1./len(self.gem_data)*2) #arbitrary number. Can miss 79 beats
+                self.display.health.on_miss(1./len(self.gem_data)) 
             else:
                 self.display.health.on_hit(1./self.display.shapes_count, shape)
                 #creates spell animation

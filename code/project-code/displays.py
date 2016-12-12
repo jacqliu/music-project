@@ -107,7 +107,23 @@ class SpellDisplay(InstructionGroup):
         self.shapes = {'triangle': self.make_triangle, 'square': self.make_square, 'diamond': self.make_diamond, 'x': self.make_x, 'circle': self.make_circle}
         self.spells = []
 
+        self.time = 0
+
     def make_spell(self, shape, nodes):
+        #general lines between nodes
+        for i in range(len(nodes)):
+            line = None
+            if i != len(nodes)-1: #not last node
+                p1 = (nodes[i].pos[0], nodes[i].pos[1])
+                p2 = (nodes[i+1].pos[0], nodes[i+1].pos[1])
+                line = MovingShape(CRectangle(cpos = p1, size = (20, 20), source = '../../snowflake.png'), p1, p2, color = white_gold)
+            else:
+                p1 = (nodes[i].pos[0], nodes[i].pos[1])
+                p2 = (nodes[0].pos[0], nodes[0].pos[1])
+                line = MovingShape(CRectangle(cpos = p1, size = (20, 20), source = '../../snowflake.png'), p1, p2, color = white_gold)
+            self.add(line)
+            self.spells.append(line)
+
         shape_obj, color = self.shapes[shape](self.find_center(nodes))
         spell = Spell(shape_obj, color)
         self.add(spell)
@@ -129,12 +145,14 @@ class SpellDisplay(InstructionGroup):
         return (CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['t'])
 
     def on_update(self, dt):
+        self.time += dt
         to_remove = []
         for s in self.spells:
             if s.on_update(dt) == False:
                 to_remove.append(s)
         for s in to_remove:
             self.spells.remove(s)
+            self.remove(s)
 
     def find_center(self, nodes):
         x = 0
@@ -164,6 +182,31 @@ class Spell(InstructionGroup):
         if self.time > self.duration:
             return False
         return True
+
+#line that has
+class MovingShape(InstructionGroup):
+    def __init__(self, shape, p1, p2, color = gold, duration = 1):
+        super(MovingShape, self).__init__()
+        self.color = Color(hsv =color)
+        self.shape = shape #Line(points = [nodes[i].pos[0], nodes[i].pos[1], nodes[i+1].pos[0], nodes[i+1].pos[1]], width = 5)
+        self.add(self.color)
+        self.add(self.shape)
+        self.duration = duration
+
+        self.xanim = KFAnim((0, p1[0]), (self.duration-.1, p2[0]))
+        self.yanim = KFAnim((0, p1[1]), (self.duration-.1, p2[1]))
+        self.fade_anim = KFAnim((0, 1), (self.duration, 0))
+
+        self.time = 0
+
+    def on_update(self, dt):
+        self.time += dt
+        self.shape.cpos = (self.xanim.eval(self.time), self.yanim.eval(self.time))
+        self.color.a = self.fade_anim.eval(self.time)        
+        if self.time > self.duration:
+            return False
+        return True
+
 
 
 
