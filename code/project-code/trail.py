@@ -12,6 +12,16 @@ import numpy as np
 import random
 from common.gfxutil import *
 
+time_len = 150
+now_bar_loc = 150
+lanes_height = Window.height/2 + 100
+lanes_width = Window.width/2 - 50
+top_diff = 10
+bottom_diff = 50
+now_bar_width = (lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
+fwoosh_time = .2
+shape_time = 3
+
 class TrailDisplay(InstructionGroup):
     def __init__(self): #callback function takes in which shape was created
         super(TrailDisplay, self).__init__()
@@ -33,17 +43,23 @@ class TrailDisplay(InstructionGroup):
 
         self.shapes = {'triangle': 0, 'square': 0, 'diamond': 0, 'x': 0, 'circle': 0}
 
+        self.time = 0
+        self.anims = {}
+
 
     def on_touch_down(self, pos, push):
         #draw shapes, game logic
         if not push:
             # self.timer_miss = 100
             # self.timer_push = 100
+            anim = KFAnim((self.time, lanes_width, now_bar_loc), (self.time+fwoosh_time, pos[0], pos[1]))
+
             self.miss = False
             self.push = False
-            new = CEllipse(cpos = pos, size = (30, 30), segments = 40)
+            new = CEllipse(cpos = anim.eval(self.time), size = (30, 30), segments = 40)
             self.add(new)
             self.objs.append(new)
+            self.anims[new] = anim
         else:
             #self.timer_push = .2
             self.push = True
@@ -94,6 +110,7 @@ class TrailDisplay(InstructionGroup):
     def on_update(self, dt):
         # self.timer_push -= dt
         # self.timer_miss -= dt
+        self.time += dt
 
         if self.push or self.miss: #self.timer_push < 0 or self.timer_miss < 0:
             ####### CLEAR OBJECTS SUPER IMPORTANT ########
@@ -102,10 +119,16 @@ class TrailDisplay(InstructionGroup):
             self.objs = []
             self.waste_objs = []
             self.waste_objs_x = []
+            self.anims = {}
             self.color.h, self.color.s, self.color.v = gold
 
         if len(self.objs) > 10 and self.miss == False:
             self.on_miss()
+
+        for obj in self.objs:
+            new_pos = self.anims[obj].eval(self.time)
+            obj.cpos = new_pos
+
 
     def possible_types_object(self):
         #circle detection

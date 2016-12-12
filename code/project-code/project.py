@@ -50,9 +50,6 @@ MOVE_BUTTON_VAL = 1048576
 TRIGGER_VAL = 524288
 TRIANGLE_VAL = 16
 
-time_len = 200
-now_bar_loc = 100
-
 # Set up ZeroMQ
 context = zmq.Context()
 socket = context.socket(zmq.PAIR)
@@ -188,7 +185,8 @@ class MainWidget(BaseWidget) :
 
 
     def on_key_up(self, keycode):
-        pass
+        if keycode[1] == 'm':
+            self.player.on_button_up(0)
 
     #called by psmove, always called three at a time
     def ps_on_touch_down(self, pos, move_button_down):
@@ -393,21 +391,35 @@ class SongData(object):
 
 # display for a single gem at a position with a color (if desired)
 class GemDisplay(InstructionGroup):
-    def __init__(self, pos, color):
+    def __init__(self, pos, color, current_time, gem_time):
         super(GemDisplay, self).__init__()
 
-        self.time = 0
+        self.radius_anim = KFAnim((current_time, 0, 0), (gem_time-(lanes_height-now_bar_loc)/float(time_len)-.1, 0, 0), (gem_time-(lanes_height-now_bar_loc)/float(time_len), top_diff*2-10, top_diff*2-10), (gem_time+now_bar_loc/float(time_len), bottom_diff*2, (top_diff*2-10)*3))
+        self.time = current_time
 
+        self.pos_anim = KFAnim((current_time, lanes_width, lanes_height), (gem_time-(lanes_height-now_bar_loc)/float(time_len), lanes_width, lanes_height), (gem_time, lanes_width, now_bar_loc), (gem_time+(lanes_height-now_bar_loc)/float(time_len), lanes_width, now_bar_loc-lanes_height))
+
+        # animate radius
+        w, h = self.radius_anim.eval(self.time)
+        # self.circle.csize = (2*rad, 2*rad)
+
+        # animate position
+        pos = self.pos_anim.eval(self.time)
         self.pos = pos
+
+        # self.time = 0
+
+        # self.pos = pos
         self.color = Color(hsv=color)
         self.add(self.color)
-        self.gem = CEllipse(cpos = self.pos, size = (23, 23), segments = 40)
+        self.gem = CEllipse(cpos = self.pos, size = (w, h), segments = 40)
         self.add(self.gem)
 
         self.here = True
         self.stop = 0
 
         self.miss = False
+
         
     # change to display this gem being hit
     def on_hit(self):
@@ -428,10 +440,23 @@ class GemDisplay(InstructionGroup):
 
     # useful if gem is to animate
     def on_update(self, dt):
+
+        if self.here:
+            # animate radius
+            w,h = self.radius_anim.eval(self.time)
+            self.gem.csize = (w, h)
+
+            # animate position
+            pos = self.pos_anim.eval(self.time)
+            self.gem.cpos = pos
+
         self.time += dt
         if not self.here and self.gem.size != (0,0):
             self.gem.size = (0,0)
-            self.remove(self.gem)
+            try:
+                self.remove(self.gem)
+            except:
+                pass
 
         return self.here
 
@@ -445,9 +470,9 @@ class ButtonDisplay(InstructionGroup):
     # displays when button is down (and if it hit a gem)
     def on_down(self, hit, coords):
         if hit:
-            self.ps.emitter_x = coords[0]
-            self.ps.emitter_y = coords[1]
-            self.ps.start()
+            self.ps.emitter_x = lanes_width
+            self.ps.emitter_y = now_bar_loc
+            # self.ps.start()
 
     # back to normal state
     def on_up(self):
@@ -470,14 +495,29 @@ class BeatMatchDisplay(InstructionGroup):
         self.add(self.color)
 
         # only 2 lanes
+        ## CHANGING
         self.lanes = []
-        for i in range(Window.height-60, Window.height, 30):
-            line = Line(points=[0, i, Window.width, i])
-            self.lanes.append(line)
-            self.add(line)
+        # for i in range(Window.height-60, Window.height, 30):
+        #     line = Line(points=[0, i, Window.width, i])
+        #     self.lanes.append(line)
+        #     self.add(line)
 
-        self.now_bar = Line(points=[now_bar_loc, Window.height-60, now_bar_loc, Window.height-30], width=1) #TODO - switch to relative to height of window
+        line_left = Line(points=[lanes_width-bottom_diff, 0, lanes_width-top_diff, lanes_height])
+        self.lanes.append(line_left)
+        self.add(line_left)
+
+        line_right = Line(points=[lanes_width+bottom_diff, 0, lanes_width+top_diff, lanes_height])
+        self.lanes.append(line_right)
+        self.add(line_right)
+
+        ## CHANGING
+        # self.now_bar = Line(points=[now_bar_loc, Window.height-60, now_bar_loc, Window.height-30], width=1) #TODO - switch to relative to height of window
+        # self.add(self.now_bar)
+
+        self.now_bar = Line(points=[lanes_width-now_bar_width, now_bar_loc, lanes_width+now_bar_width, now_bar_loc])
         self.add(self.now_bar)
+
+        print now_bar_width
         
         # make button for now bar
         self.button = ButtonDisplay(ps)
@@ -498,10 +538,14 @@ class BeatMatchDisplay(InstructionGroup):
         #     self.barlines.append(l)
         #     self.add(l)
 
-        # make gems
+        # keep track of shapes and anims
+        self.shapes = []
+
+        # make gems and shape cues
         self.shapes_count = 0
         self.gems_raw = gem_data
         self.gems = []
+        last_t = 0
         for (t,letter) in self.gems_raw:
             # make gem in correct lane and location
             pos = [float(t)*time_len+now_bar_loc, Window.height-60+15]
@@ -511,22 +555,33 @@ class BeatMatchDisplay(InstructionGroup):
                 c = white
             else:
                 c = red
-            g = GemDisplay(pos, c)
+            g = GemDisplay(pos, c, 0, float(t))
             self.gems.append(g)
             self.add(g)
 
             # indicate suggested shape
             if letter in ['c', 't', 's', 'd', 'x']:
-                self.add_shape(letter, pos)
+                self.add_shape(letter, pos, float(last_t))
                 self.shapes_count += 1
 
-    def add_shape(self, letter, pos):
+            last_t = t
+
+    def add_shape(self, letter, pos, t):
         shape_map = {'c':circle_path, 't':triangle_path, 's': square_path, 'd': diamond_path, 'x': x_path}
         text = Image(shape_map[letter]).texture
+
+        ## CHANGING
+
+        rad_anim = KFAnim((t-.1, 0), (t, 50), (t+shape_time, 0))
+        rad = rad_anim.eval(self.time)
         
         self.add(Color(hsv = color_map[letter])) #set color of thing. Color_map comes from trail.py
-        self.add(Rectangle(texture=text, pos=(pos[0]-11, pos[1]-40), size=(20, 20), color=cyan))
+        sh = CRectangle(texture=text, cpos=(lanes_width, lanes_height+50), csize=(rad, rad), color=cyan)
+        self.add(sh)
+        # self.add(Rectangle(texture=text, pos=(pos[0]-11, pos[1]-40), size=(20, 20), color=cyan))
         self.add(self.color) #set back to original
+
+        self.shapes.append((sh, rad_anim))
 
     # called by Player. Causes the right thing to happen
     def gem_hit(self, gem_idx):
@@ -554,8 +609,12 @@ class BeatMatchDisplay(InstructionGroup):
             g.on_update(dt)
         self.time += dt
 
+        for (sh, anim) in self.shapes:
+            rad = anim.eval(self.time)
+            sh.csize = (rad, rad)
+
         # every second is time_len coords height wise
-        self.translate.x = -self.time*time_len
+        # self.translate.x = -self.time*time_len
 
 
 # Handles game logic and keeps score.
