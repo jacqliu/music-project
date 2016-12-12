@@ -35,12 +35,12 @@ class HealthDisplay(InstructionGroup):
         # self.shapes = [Rectangle(pos=pos, size=(Window.height/4, Window.height/4), source = "../")]
 
         #health bar display
-        self.health_bar = Line(points = [0, Window.height, Window.width*self.health_left/100.0, Window.height], width = 30, cap = 'none')
-        self.damage_bar = Line(points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height], width = 30, cap = 'none')
-        self.add(Color(hsv = yellow))
-        self.add(self.health_bar)
+        self.health_bar = Line(points = [0, Window.height, Window.width*(100- self.health_left)/100.0, Window.height], width = 30, cap = 'none')
+        #self.damage_bar = Line(points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height], width = 30, cap = 'none')
         self.add(Color(hsv = lime))
-        self.add(self.damage_bar)
+        self.add(self.health_bar)
+        # self.add(Color(hsv = lime))
+        # self.add(self.damage_bar)
 
         #progress display
         # if triangles != 0:
@@ -96,7 +96,7 @@ class SpellDisplay(InstructionGroup):
         self.spells.append(spell)
 
     def make_circle(self, pos):
-        return (Rectangle(pos=pos, size=(Window.height/4, Window.height/4), source = circle_source), color_map['c'])
+        return (CRectangle(cpos=pos, size=(Window.height/4, Window.height/4), source = circle_source), color_map['c'])
 
     def make_square(self, pos):
         return (CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['s'])

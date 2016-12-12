@@ -46,8 +46,8 @@ start_bg = "../../start_screen.jpg"
 #bg_source = "../../background.png"
 # bg_source = "../../landscape.jpg"
 
-MOVE_BUTTON_VAL = 1048576
-TRIGGER_VAL = 524288
+MOVE_BUTTON_VAL = 128 #524288
+TRIGGER_VAL = 64 #1048576 
 TRIANGLE_VAL = 16
 
 # Set up ZeroMQ
@@ -475,11 +475,12 @@ class ButtonDisplay(InstructionGroup):
         self.ps = ps
 
     # displays when button is down (and if it hit a gem)
-    def on_down(self, hit, coords):
+    def on_down(self, hit, coords, ps_start):
         if hit:
             self.ps.emitter_x = lanes_width
             self.ps.emitter_y = now_bar_loc
-            # self.ps.start()
+            if ps_start:
+                self.ps.start() #TODO replace with something more editable and useful.
 
     # back to normal state
     def on_up(self):
@@ -603,8 +604,8 @@ class BeatMatchDisplay(InstructionGroup):
         self.gems[gem_idx].on_pass()
 
     # called by Player. Causes the right thing to happen
-    def on_button_down(self, hit, coords):
-        self.button.on_down(hit, coords)
+    def on_button_down(self, hit, coords, ps_start):
+        self.button.on_down(hit, coords, ps_start)
 
     # called by Player. Causes the right thing to happen
     def on_button_up(self):
@@ -642,7 +643,7 @@ class Player(object):
         self.barlines_data = self.song.get_barlines()
 
         # score mechanics
-        self.max_streak  =0
+        self.max_streak = 0
         self.score = 0
         self.streak = 0
         self.bonus = 1
@@ -663,8 +664,11 @@ class Player(object):
             #print coords
             hit = True
 
-        self.display.on_button_down(hit, coords)
-        
+        if self.streak > 10: #particle system combo mechanic
+            self.display.on_button_down(hit, coords, True)
+        else:
+            self.display.on_button_down(hit, coords, False)
+
         if hit and self.display.gem_here(idx):
             self.trail_display.on_touch_down(pos, push)
 
@@ -731,6 +735,4 @@ class Player(object):
                 # reset score mechanics
                 self.reset_score_mechanics()
 
-#Config.set('graphics', 'fullscreen', 1)
-#Window.fullscreen = True
 run(MainWidget)
