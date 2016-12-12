@@ -117,11 +117,11 @@ class SpellDisplay(InstructionGroup):
             if i != len(nodes)-1: #not last node
                 p1 = (nodes[i].pos[0], nodes[i].pos[1])
                 p2 = (nodes[i+1].pos[0], nodes[i+1].pos[1])
-                line = MovingShape(CRectangle(cpos = p1, size = (20, 20), source = '../../snowflake.png'), p1, p2, color = white_gold)
+                line = MovingShape(CRectangle(cpos = p1, size = (30, 30), source = '../../snowflake.png'), p1, p2, color = white_gold)
             else:
                 p1 = (nodes[i].pos[0], nodes[i].pos[1])
                 p2 = (nodes[0].pos[0], nodes[0].pos[1])
-                line = MovingShape(CRectangle(cpos = p1, size = (20, 20), source = '../../snowflake.png'), p1, p2, color = white_gold)
+                line = MovingShape(CRectangle(cpos = p1, size = (30, 30), source = '../../snowflake.png'), p1, p2, color = white_gold)
             self.add(line)
             self.spells.append(line)
 
@@ -135,10 +135,10 @@ class SpellDisplay(InstructionGroup):
 
     def make_circle(self, pos):
         shape1 = (CRectangle(cpos=(Window.width/2.0, Window.height/2.0), size=(Window.height/1.2, Window.height/1.2), source = "music_circle.png"), color_map['c'])
-        s = CRectangle(cpos=pos, size=(Window.height/2, Window.height/2), source = "node.png")
-        ms = MovingShape(s, pos, (Window.width/2, lanes_height), color = color_map['c']) #TODO doesn't move to center
-        shape2 = (ms, color_map['c'])
-        return [shape1, shape2]
+        # s = CRectangle(cpos=pos, size=(Window.height/2, Window.height/2), source = "node.png")
+        # ms = MovingShape(s, pos, (Window.width/2, lanes_height), color = color_map['c']) #TODO doesn't move to center
+        # shape2 = (ms, color_map['c'])
+        return [shape1]
 
     def make_square(self, pos):
         points = [(pos[0] + 100, pos[1] + 100), (pos[0]-100, pos[1] + 100), (pos[0] + 100, pos[1] - 100), (pos[0] - 100, pos[1] - 100)]
@@ -156,13 +156,13 @@ class SpellDisplay(InstructionGroup):
             sparkle = MovingShape(CRectangle(cpos = pos, size = (30, 30), source = '../../snowflake.png'), pos, p, color = white_gold)
             self.spells.append(sparkle)
             self.add(sparkle)
-        return [(CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['d'])]
+        return []
 
     def make_x(self, pos):
-        return [(CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['x'])]
+        return [(CRectangle(cpos=(Window.width/2.0, Window.height/2.0), size=(Window.height/1.2, Window.height/1.2), source = "cross.png"), color_map['x'])]
 
     def make_triangle(self, pos):
-        return [(CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['t'])]
+        return [(CRectangle(cpos=(Window.width/2.0, Window.height/2.0), size=(Window.height/1.2, Window.height/1.2), source = "triangle.png"), color_map['t'])]
 
     def on_update(self, dt):
         self.time += dt
@@ -205,7 +205,7 @@ class Spell(InstructionGroup):
 
 #line that has
 class MovingShape(InstructionGroup):
-    def __init__(self, shape, p1, p2, color = gold, duration = 1):
+    def __init__(self, shape, p1, p2, color = gold, duration = .8):
         super(MovingShape, self).__init__()
         self.color = Color(hsv =color)
         self.shape = shape #Line(points = [nodes[i].pos[0], nodes[i].pos[1], nodes[i+1].pos[0], nodes[i+1].pos[1]], width = 5)
@@ -222,7 +222,6 @@ class MovingShape(InstructionGroup):
     def on_update(self, dt):
         self.time += dt
         self.shape.cpos = (self.xanim.eval(self.time), self.yanim.eval(self.time))
-        print self.shape.cpos
         self.color.a = self.fade_anim.eval(self.time)        
         if self.time > self.duration:
             return False

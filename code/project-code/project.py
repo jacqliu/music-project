@@ -60,6 +60,8 @@ class MainWidget(BaseWidget) :
         super(MainWidget, self).__init__()
         # keep track of if game is over
         self.dead = False
+        self.start_game = False
+        self.screen_count = 0
         
         # audio controller
         self.audioctrl = None
@@ -95,6 +97,7 @@ class MainWidget(BaseWidget) :
         self.paused = True
         self.playing = False
 
+        self.start_screen()
         #start a level
         #self.start_level(wav_file, gems_path, bg_source)
     def start_screen(self):
@@ -103,8 +106,22 @@ class MainWidget(BaseWidget) :
         self.playing = False
         self.paused = True
 
-        self.background = BGWidget(start_bg, levels)
-        self.add_widget(self.background)
+        if self.screen_count == 0:
+            self.background = BGWidget("intro_bg_1.png")
+            self.add_widget(self.background)
+        elif self.screen_count == 1:
+            self.background = BGWidget("intro_bg_2.png")
+            self.add_widget(self.background)
+        elif self.screen_count == 2:
+            self.background = BGWidget("intro_bg_3.png")
+            self.add_widget(self.background)
+        elif self.screen_count == 3:
+            self.background = BGWidget("intro_bg_4.png")
+            self.add_widget(self.background)
+        else:
+            self.start_game = True
+            self.background = BGWidget(start_bg, levels)
+            self.add_widget(self.background)
 
         # keep track of objects
         self.objects = AnimGroup()
@@ -113,6 +130,8 @@ class MainWidget(BaseWidget) :
         #cursor display
         self.cursor_display = CursorDisplay()
         self.objects.add(self.cursor_display)
+
+        self.screen_count += 1
 
     def start_level(self, wave_file, gems_path, background_img_src):
         #set start variables based on screen size
@@ -221,7 +240,7 @@ class MainWidget(BaseWidget) :
     def ps_on_touch_up(self, pos):
         if self.playing:
             self.player.on_button_up(pos)
-        else:
+        elif self.start_game:
             try:
                 lvl = self.level_select(touch.pos)
                 self.start_level(lvl[0], lvl[1], lvl[2])
@@ -240,7 +259,7 @@ class MainWidget(BaseWidget) :
     def on_touch_up(self, touch):
         if self.playing:
             self.player.on_button_up(touch.pos)
-        else:
+        elif self.start_game:
             try:
                 lvl = self.level_select(touch.pos)
                 self.start_level(lvl[0], lvl[1], lvl[2])
