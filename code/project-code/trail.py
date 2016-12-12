@@ -71,17 +71,17 @@ class TrailDisplay(InstructionGroup):
         else:
             #self.timer_push = .2
             self.push = True
-            if self.objs and len(self.waste_objs_x) < 5 and len(self.waste_objs) < 5: #len 2 is special case for X
-                lines = []
-                for i in range(len(self.objs)-1):
-                    pos1 = self.objs[i].cpos
-                    pos2 = self.objs[i+1].cpos
-                    line = Line(points=[pos1[0], pos1[1], pos2[0], pos2[1]])
-                    self.add(line)
-                    lines.append(line)
-                line = Line(points=[self.objs[0].cpos[0], self.objs[0].cpos[1], self.objs[-1].cpos[0], self.objs[-1].cpos[1]])
-                self.add(line)
-                self.objs += lines + [line]
+            # if self.objs and len(self.waste_objs_x) < 5 and len(self.waste_objs) < 5: #len 2 is special case for X
+            #     lines = []
+            #     for i in range(len(self.objs)-1):
+            #         pos1 = self.objs[i].cpos
+            #         pos2 = self.objs[i+1].cpos
+            #         line = Line(points=[pos1[0], pos1[1], pos2[0], pos2[1]])
+            #         self.add(line)
+            #         lines.append(line)
+            #     line = Line(points=[self.objs[0].cpos[0], self.objs[0].cpos[1], self.objs[-1].cpos[0], self.objs[-1].cpos[1]])
+            #     self.add(line)
+            #     self.objs += lines + [line]
 
             # else:
             #     print 'pushed without objects'
@@ -90,7 +90,7 @@ class TrailDisplay(InstructionGroup):
             shape = self.possible_types_object()
             if shape:
                 self.shapes[shape] += 1
-                self.callback(shape, list(self.objs)) #modifies health, can also be used for game logic
+                self.callback(shape, list(self.objs)+list(self.waste_objs)+list(self.waste_objs_x)) #modifies health, can also be used for game logic
             else:
                 self.on_miss()
             print shape
@@ -158,7 +158,7 @@ class TrailDisplay(InstructionGroup):
                 pass
 
         #equilateral triangle detection
-        elif len(self.objs) == 6:
+        elif len(self.objs) == 3:
             points = []
             for i in range(3):
                 points.append(self.objs[i].cpos)
@@ -166,7 +166,7 @@ class TrailDisplay(InstructionGroup):
                 return 'triangle'
 
         #square or diamond detection
-        elif len(self.objs) == 8:
+        elif len(self.objs) == 4:
             points = []
             for i in range(4):
                 points.append(self.objs[i].cpos)

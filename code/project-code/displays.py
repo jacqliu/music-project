@@ -90,7 +90,7 @@ class SpellDisplay(InstructionGroup):
         self.spells = []
 
     def make_spell(self, shape, nodes):
-        shape_obj, color = self.shapes[shape](nodes[0].pos)
+        shape_obj, color = self.shapes[shape](self.find_center(nodes))
         spell = Spell(shape_obj, color)
         self.add(spell)
         self.spells.append(spell)
@@ -117,6 +117,15 @@ class SpellDisplay(InstructionGroup):
                 to_remove.append(s)
         for s in to_remove:
             self.spells.remove(s)
+
+    def find_center(self, nodes):
+        x = 0
+        y = 0
+        for node in nodes:
+            x += node.pos[0]
+            y += node.pos[1]
+        return (x/float(len(nodes)), y/float(len(nodes)))
+
 
 #a single Spell animation that has shape, color, and duration
 class Spell(InstructionGroup):
