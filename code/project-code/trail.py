@@ -24,7 +24,7 @@ now_bar_width = None #(lanes_height-now_bar_loc)/float(lanes_height)*(bottom_dif
 
 def redraw_window(): 
     global lanes_height, lanes_width, now_bar_width
-    lanes_height = Window.height/4 * 3
+    lanes_height = Window.height/4 * 3 - 50
     lanes_width = Window.width/2
     now_bar_width = (lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
 

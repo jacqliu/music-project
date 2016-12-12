@@ -50,9 +50,9 @@ class HealthDisplay(InstructionGroup):
         #health bar display
         self.progress_bar = Line(points = [0, Window.height-30, Window.width*self.progress_made/self.total_progress, Window.height-30], width = health_bar_width, cap = 'none')
         self.damage_bar = Line(points = [0, Window.height-60, Window.width*self.damage_left/self.total_damage, Window.height-60], width = health_bar_width, cap = 'none')
-        self.add(Color(hsv = lime))
-        self.add(self.progress_bar)
         self.add(Color(hsv = gray))
+        self.add(self.progress_bar)
+        self.add(Color(hsv = lime))
         self.add(self.damage_bar)
 
         #progress displayp
@@ -65,8 +65,11 @@ class HealthDisplay(InstructionGroup):
         self.damage_bar.points = [0, Window.height-60, Window.width*self.damage_left/self.total_damage, Window.height-60]
 
     def on_hit(self, frac, shape):
-        self.progress_made += self.progress_made*frac
-        self.progress_bar.points = [0, Window.height, Window.width*self.progress_made/self.total_progress, Window.height]
+        self.progress_made += self.total_progress*frac
+        self.progress_bar.points = [0, Window.height-30, Window.width*self.progress_made/self.total_progress, Window.height-30]
+
+        # print self.progress_made
+        # print frac
 
     # def on_gain(self, frac, shape):
     #     self.progress_made += self.progress_made*frac

@@ -59,7 +59,6 @@ class MainWidget(BaseWidget) :
     def __init__(self):
         super(MainWidget, self).__init__()
         # keep track of if game is over
-        self.end = False
         self.dead = False
         
         # audio controller
@@ -117,7 +116,7 @@ class MainWidget(BaseWidget) :
     def start_level(self, wave_file, gems_path, background_img_src):
         #set start variables based on screen size
         global lanes_height, lanes_width, now_bar_width
-        lanes_height = Window.height/4 * 3
+        lanes_height = Window.height/4 * 3 - 50
         lanes_width = Window.width/2
         now_bar_width = (lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
         redraw_window()
@@ -306,22 +305,9 @@ class MainWidget(BaseWidget) :
                 self.info.text += '\n\nPress triangle to start!'
 
             #end game screen
-            self.player.score = 0
-            if (len(self.audioctrl.mixer.generators) == 0 and not self.end) or self.dead:
+            if len(self.audioctrl.mixer.generators) == 0 or self.dead:
                 if self.audioctrl.mixer.generators != 0: #premature end
                     self.audioctrl.song.set_gain(0)
-
-                #add shape score
-                self.end = True
-                for shape in self.trail_display.shapes.keys():
-                    if shape == "triangle":
-                        self.player.score += 300*self.trail_display.shapes[shape]
-                    elif shape == "circle":
-                        self.player.score += 400*self.trail_display.shapes[shape]
-                    elif shape == "x":
-                        self.player.score += 400*self.trail_display.shapes[shape]
-                    elif shape == "square" or shape == "diamond":
-                        self.player.score += 500*self.trail_display.shapes[shape]
 
                 self.canvas.clear()
                 l = Label(text = "text", halign='left', valign='middle', font_size='20sp',
@@ -564,14 +550,6 @@ class BeatMatchDisplay(InstructionGroup):
         self.translate = Translate()
         self.add(self.translate)
 
-        # make barlines
-        # self.barlines_raw = barline_data
-        # self.barlines = []
-        # for (t) in self.barlines_raw:
-        #     l = Line(points=[float(t)*time_len+100, 540, float(t)*time_len+100, 570])
-        #     self.barlines.append(l)
-        #     self.add(l)
-
         # keep track of shapes and anims
         self.shapes = []
 
@@ -604,15 +582,12 @@ class BeatMatchDisplay(InstructionGroup):
         shape_map = {'c':circle_path, 't':triangle_path, 's': square_path, 'd': diamond_path, 'x': x_path}
         text = Image(shape_map[letter]).texture
 
-        ## CHANGING
-
         rad_anim = KFAnim((t-.1, 0), (t, 50), (t+shape_time, 0))
         rad = rad_anim.eval(self.time)
         
         self.add(Color(hsv = color_map[letter])) #set color of thing. Color_map comes from trail.py
         sh = CRectangle(texture=text, cpos=(lanes_width, lanes_height+50), csize=(rad, rad), color=cyan)
         self.add(sh)
-        # self.add(Rectangle(texture=text, pos=(pos[0]-11, pos[1]-40), size=(20, 20), color=cyan))
         self.add(self.color) #set back to original
 
         self.shapes.append((sh, rad_anim))
@@ -704,7 +679,7 @@ class Player(object):
 
             # score mechanics
             self.streak += 1
-            self.score += self.bonus * 100
+            # self.score += self.bonus * 100
             self.bonus = self.streak / 10 + 1
             self.max_streak = max(self.streak, self.max_streak)
         else:
@@ -738,6 +713,17 @@ class Player(object):
                 self.display.health.on_hit(1./self.display.shapes_count, shape)
                 #creates spell animation
                 self.spells.make_spell(shape, nodes)
+
+            # adjust score
+            if shape == "triangle":
+                self.score += 300*self.trail_display.shapes[shape]*self.bonus
+            elif shape == "circle":
+                self.score += 400*self.trail_display.shapes[shape]*self.bonus
+            elif shape == "x":
+                self.score += 400*self.trail_display.shapes[shape]*self.bonus
+            elif shape == "square" or shape == "diamond":
+                self.score += 500*self.trail_display.shapes[shape]
+
 
     # reset score mechanics if gem is missed
     def reset_score_mechanics(self):
