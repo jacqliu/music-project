@@ -292,8 +292,7 @@ class MainWidget(BaseWidget) :
                 self.dead = True
 
             #display text
-            self.info.text = '\n\n\nScore: '+ str(self.player.score)
-            self.info.text += '\nGenerators: ' + str(len(self.objects.objects))
+            self.info.text = 'Score: '+ str(self.player.score)
             self.info.text += '\nStreak: ' + str(self.player.streak)
             self.info.text += '\nBonus: ' + str(self.player.bonus) + 'x \n\n'
             self.info.text += str(self.trail_display)
