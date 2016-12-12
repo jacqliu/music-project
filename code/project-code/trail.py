@@ -14,13 +14,21 @@ from common.gfxutil import *
 
 time_len = 150
 now_bar_loc = 150
-lanes_height = Window.height/2 + 100
-lanes_width = Window.width/2 - 50
-top_diff = 10
-bottom_diff = 50
-now_bar_width = (lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
 fwoosh_time = .2
 shape_time = 3
+top_diff = 10
+bottom_diff = 50
+lanes_height = None #Window.height/2 + 100
+lanes_width = None #Window.width/2 - 50
+now_bar_width = None #(lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
+
+def redraw_window(): 
+    lanes_height = Window.height/2 + 100
+    lanes_width = Window.width/2 - 50
+    now_bar_width = (lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
+    
+
+
 
 class TrailDisplay(InstructionGroup):
     def __init__(self): #callback function takes in which shape was created

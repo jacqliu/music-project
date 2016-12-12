@@ -34,6 +34,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'psmoveapi', 'b
 
 import psmove
 import zlib, pickle, zmq
+#from time import sleep
+
+#os.system('./psmovepair')
+#sleep(5.0)
 
 tracker = psmove.PSMoveTracker()
 move = psmove.PSMove()

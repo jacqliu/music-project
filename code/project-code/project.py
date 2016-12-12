@@ -106,6 +106,12 @@ class MainWidget(BaseWidget) :
         self.add_widget(self.background)
 
     def start_level(self, wave_file, gems_path, background_img_src):
+        #set start variables based on screen size
+        global lanes_height, lanes_width, now_bar_width
+        lanes_height = Window.height/2 + 100
+        lanes_width = Window.width/2 - 50
+        now_bar_width = (lanes_height-now_bar_loc)/float(lanes_height)*(bottom_diff-top_diff) + top_diff
+
         self.paused = True
         self.end = False
         self.canvas.clear()
