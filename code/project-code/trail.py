@@ -111,6 +111,7 @@ class TrailDisplay(InstructionGroup):
         #     self.miss_particle = MissParticle(self.objs[0].pos)
         # self.add(self.miss_particle)
         #self.timer_miss = .15
+        self.callback("miss", None)
         self.miss = True
 
     def on_update(self, dt):

@@ -16,7 +16,6 @@ from kivy.graphics.instructions import InstructionGroup, VertexInstruction
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.graphics import PushMatrix, PopMatrix, Translate, Scale, Rotate
 from kivy.clock import Clock as kivyClock
-from kivy.config import Config
 from common.kivyparticle import ParticleSystem
 
 import random
@@ -29,10 +28,11 @@ import pickle
 from kivy.core.image import Image
 
 # appropriate files
-traverse_town = ("../../kh_traverse_town.wav", "../../kh_traverse_town_gems.txt", "../../background.png")
-mirror_mirror = ("../../mirror_mirror.wav", "../../mirror_mirror_gems.txt", "../../background.png")
-xion = ("../../xion.wav", "../../xion.txt", "../../background.png")
-canon = ("../../canon.wav", "../../canon_gems.txt", "../../background.png")
+traverse_town = ("../../kh_traverse_town.wav", "../../kh_traverse_town_gems.txt", "../../background.png", "Traverse Town - Kingdom Hearts")
+mirror_mirror = ("../../mirror_mirror.wav", "../../mirror_mirror_gems.txt", "../../background.png", "Mirror Mirror - RWBY")
+xion = ("../../xion.wav", "../../xion.txt", "../../background.png", "Xion's Theme - Kingdom Hearts")
+canon = ("../../canon.wav", "../../canon_gems.txt", "../../background.png", "Pachelbel's Canon")
+levels = [traverse_town, mirror_mirror, xion, canon]
 # takemeout_solo = "../../TakeMeOut_solo.wav"
 tmo_sfx = "../../sfx.txt"
 # wav_file = "../../mirror_mirror.wav"
@@ -60,11 +60,12 @@ class MainWidget(BaseWidget) :
         super(MainWidget, self).__init__()
         # keep track of if game is over
         self.end = False
+        self.dead = False
         
         # audio controller
         self.audioctrl = None
         # background
-        self.background = BGWidget(start_bg)
+        self.background = BGWidget(start_bg, levels)
         self.add_widget(self.background)
 
         # text
@@ -102,8 +103,16 @@ class MainWidget(BaseWidget) :
         self.playing = False
         self.paused = True
 
-        self.background = BGWidget(start_bg)
+        self.background = BGWidget(start_bg, levels)
         self.add_widget(self.background)
+
+        # keep track of objects
+        self.objects = AnimGroup()
+        self.canvas.add(self.objects)
+
+        #cursor display
+        self.cursor_display = CursorDisplay()
+        self.objects.add(self.cursor_display)
 
     def start_level(self, wave_file, gems_path, background_img_src):
         #set start variables based on screen size
@@ -168,6 +177,11 @@ class MainWidget(BaseWidget) :
 
         self.playing = True
 
+    def level_select(self, pos):
+        if pos[1] < Window.height/3.0:
+            return levels[int(pos[0])*len(levels)/int(Window.width)]
+
+
     def on_key_down(self, keycode, modifiers):
         # play / pause toggle
         # pass
@@ -179,6 +193,8 @@ class MainWidget(BaseWidget) :
             self.start_level(mirror_mirror[0], mirror_mirror[1], mirror_mirror[2])
         elif keycode[1] == 'c':
             self.start_level(canon[0], canon[1], canon[2])
+        elif keycode[1] == 's':
+            self.start_screen()
 
         if self.playing: #should be able to eventually get rid of this line, or replace with something else
             if keycode[1] == 'p':
@@ -187,15 +203,12 @@ class MainWidget(BaseWidget) :
             elif keycode[1] == 'm':
                 self.player.on_button_down(None, True)
 
-            elif keycode[1] == 's':
-                self.start_screen()
-
 
     def on_key_up(self, keycode):
         if keycode[1] == 'm':
             self.player.on_button_up(0)
 
-    #called by psmove, always called three at a time
+    #called by psmove
     def ps_on_touch_down(self, pos, move_button_down):
         if self.playing:
             self.player.on_button_down(pos, move_button_down)
@@ -207,6 +220,9 @@ class MainWidget(BaseWidget) :
     def ps_on_touch_up(self, pos):
         if self.playing:
             self.player.on_button_up(pos)
+        else:
+            lvl = self.level_select(touch.pos)
+            self.start_level(lvl[0], lvl[1], lvl[2])
 
     #called by normal mouse and keyboard control
     def on_touch_down(self, touch):
@@ -220,6 +236,9 @@ class MainWidget(BaseWidget) :
     def on_touch_up(self, touch):
         if self.playing:
             self.player.on_button_up(touch.pos)
+        else:
+            lvl = self.level_select(touch.pos)
+            self.start_level(lvl[0], lvl[1], lvl[2])
         
     def on_update(self):
         #getting data form psmove. Trigger presses and releases are events, otherwise vals will be [0, 0].
@@ -269,6 +288,10 @@ class MainWidget(BaseWidget) :
             except zmq.Again as e:
                 pass
 
+            #make sure game isn't over
+            if self.display.health.damage_left <= 0:
+                self.dead = True
+
             #display text
             self.info.text = '\n\n\nScore: '+ str(self.player.score)
             self.info.text += '\nGenerators: ' + str(len(self.objects.objects))
@@ -284,19 +307,21 @@ class MainWidget(BaseWidget) :
 
             #end game screen
             self.player.score = 0
-            if len(self.audioctrl.mixer.generators) == 0 and not self.end:
+            if (len(self.audioctrl.mixer.generators) == 0 and not self.end) or self.dead:
+                if self.audioctrl.mixer.generators != 0: #premature end
+                    self.audioctrl.song.set_gain(0)
+
                 #add shape score
-                if not self.end:
-                    self.end = True
-                    for shape in self.trail_display.shapes.keys():
-                        if shape == "triangle":
-                            self.player.score += 300*self.trail_display.shapes[shape]
-                        elif shape == "circle":
-                            self.player.score += 400*self.trail_display.shapes[shape]
-                        elif shape == "x":
-                            self.player.score += 400*self.trail_display.shapes[shape]
-                        elif shape == "square" or shape == "diamond":
-                            self.player.score += 500*self.trail_display.shapes[shape]
+                self.end = True
+                for shape in self.trail_display.shapes.keys():
+                    if shape == "triangle":
+                        self.player.score += 300*self.trail_display.shapes[shape]
+                    elif shape == "circle":
+                        self.player.score += 400*self.trail_display.shapes[shape]
+                    elif shape == "x":
+                        self.player.score += 400*self.trail_display.shapes[shape]
+                    elif shape == "square" or shape == "diamond":
+                        self.player.score += 500*self.trail_display.shapes[shape]
 
                 self.canvas.clear()
                 l = Label(text = "text", halign='left', valign='middle', font_size='20sp',
@@ -305,7 +330,8 @@ class MainWidget(BaseWidget) :
                 self.add_widget(l)
                 l.text ='streak: %d' % self.player.max_streak
                 l.text += "\ntotal score: %d" % (self.player.score)
-
+                if len(self.audioctrl.mixer.generators) != 0:
+                    l.text += "\nEcho was overwhelmed by the music."
 
 
 # creates the Audio driver
@@ -706,9 +732,12 @@ class Player(object):
         if shape:
             #modifies health bar
             self.display.shapes_count = max(5, self.display.shapes_count) #so we can play unauthored ones too
-            self.display.health.on_hit(1./self.display.shapes_count, shape)
-            #creates spell animation
-            self.spells.make_spell(shape, nodes)
+            if shape == "miss":
+                self.display.health.on_miss(1./len(self.gem_data)*2) #arbitrary number. Can miss 79 beats
+            else:
+                self.display.health.on_hit(1./self.display.shapes_count, shape)
+                #creates spell animation
+                self.spells.make_spell(shape, nodes)
 
     # reset score mechanics if gem is missed
     def reset_score_mechanics(self):
@@ -725,8 +754,9 @@ class Player(object):
         hits = self.song.get_gems_in_range(t-.21, t-.11) #to account for the fact humans are generally early?
         for h in hits:
             idx = self.song.get_gem_index(h)
-            if self.display.gems[idx].here:
+            if self.display.gems[idx].here and not self.display.gems[idx].miss:
                 self.display.gem_pass(idx)
+                # if self.miss:
                 self.trail_display.on_miss()
 
                 # mute until note is hit again

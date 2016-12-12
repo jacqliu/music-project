@@ -19,11 +19,20 @@ x_path = 'particle/x.png'
 
 #Only for displaying Background images! Not interactive!
 class BGWidget(BaseWidget):
-    def __init__(self, bg_source):
+    def __init__(self, bg_source, levels = None):
         super(BGWidget, self).__init__()
      	self.bg = Rectangle(pos=(0, 0), size=(Window.width, Window.height), source = bg_source)
-     	self.canvas.add(self.bg)
+        self.canvas.add(self.bg)
 
+        if levels:
+            for i in range(len(levels)): 
+                p = (i*Window.width/len(levels), 0)
+                s = (Window.width/len(levels), Window.height/3.0)
+                c = Color(hsv = gray)
+                c.a = .7
+                self.canvas.add(c)
+                self.canvas.add(Rectangle(pos=p, size=s, source= levels[i][2]))
+     	
     def on_update(self):
     	pass
 
@@ -31,32 +40,38 @@ class BGWidget(BaseWidget):
 class HealthDisplay(InstructionGroup):
     def __init__(self, triangles = 0, squares = 0, diamonds = 0, xs = 0, circles = 0):
         super(HealthDisplay, self).__init__()
-        self.health_left = 100.0
+        self.progress_made = 0
+        self.total_progress = 100.0
+        self.damage_left = 100.0
+        self.total_damage = 100.0
         # self.shapes = [Rectangle(pos=pos, size=(Window.height/4, Window.height/4), source = "../")]
 
+        health_bar_width = 15
         #health bar display
-        self.health_bar = Line(points = [0, Window.height, Window.width*(100- self.health_left)/100.0, Window.height], width = 30, cap = 'none')
-        #self.damage_bar = Line(points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height], width = 30, cap = 'none')
+        self.progress_bar = Line(points = [0, Window.height-30, Window.width*self.progress_made/self.total_progress, Window.height-30], width = health_bar_width, cap = 'none')
+        self.damage_bar = Line(points = [0, Window.height-60, Window.width*self.damage_left/self.total_damage, Window.height-60], width = health_bar_width, cap = 'none')
         self.add(Color(hsv = lime))
-        self.add(self.health_bar)
-        # self.add(Color(hsv = lime))
-        # self.add(self.damage_bar)
+        self.add(self.progress_bar)
+        self.add(Color(hsv = gray))
+        self.add(self.damage_bar)
 
-        #progress display
+        #progress displayp
         # if triangles != 0:
         #     shape = Rectangle(pos=, size=(Window.height/4, Window.height/4), source = circle_path)
             
 
+    def on_miss(self, frac):
+        self.damage_left -= self.total_damage*frac
+        self.damage_bar.points = [0, Window.height-60, Window.width*self.damage_left/self.total_damage, Window.height-60]
 
     def on_hit(self, frac, shape):
-        self.health_left -= 100*frac
-        self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
-        self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
+        self.progress_made += self.progress_made*frac
+        self.progress_bar.points = [0, Window.height, Window.width*self.progress_made/self.total_progress, Window.height]
 
-    def on_gain(self, frac, shape):
-        self.health_left += 100*frac
-        self.health_bar.points = [0, Window.height, Window.width*self.health_left/100.0, Window.height]
-        self.damage_bar.points = [Window.width*self.health_left/100.0, Window.height, Window.width, Window.height]
+    # def on_gain(self, frac, shape):
+    #     self.progress_made += self.progress_made*frac
+    #     self.progress_bar.points = [0, Window.height, Window.width*self.progress_made/self.total_progress, Window.height]
+    #     self.damage_bar.points = [0, Window.height-60, Window.width*self.damage_left/self.total_damage, Window.height-60]
 
 #For any display related to the movement of the cursor.
 class CursorDisplay(InstructionGroup):

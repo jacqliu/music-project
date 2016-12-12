@@ -37,6 +37,7 @@ cyan = (.5, 1, 1)
 blue = (.67, 1, 1)
 purple = (.8, 1, 1)
 magenta = (.9, 1, 1)
+gray = (1, 0, .5)
 #colors = [red, orange, yellow, lime, green, cyan, blue]
 white = (0,0,1)
 
