@@ -46,9 +46,10 @@ start_bg = "../../start_screen.jpg"
 #bg_source = "../../background.png"
 # bg_source = "../../landscape.jpg"
 
-MOVE_BUTTON_VAL = 128 #524288
-TRIGGER_VAL = 64 #1048576 
+MOVE_BUTTON_VAL = 524288
+TRIGGER_VAL = 1048576 
 TRIANGLE_VAL = 16
+SQUARE_VAL = 128
 
 # Set up ZeroMQ
 context = zmq.Context()
@@ -305,6 +306,9 @@ class MainWidget(BaseWidget) :
 
                 elif vals[0] == TRIANGLE_VAL:
                     self.paused = not self.paused
+
+                elif vals[0] == SQUARE_VAL:
+                    self.start_screen()
 
                 #decide if trigger was being held
                 if self.trigger_held and self.press_pos != None:

@@ -156,7 +156,7 @@ class SpellDisplay(InstructionGroup):
             sparkle = MovingShape(CRectangle(cpos = pos, size = (30, 30), source = '../../snowflake.png'), pos, p, color = white_gold)
             self.spells.append(sparkle)
             self.add(sparkle)
-        return []
+        return [(CRectangle(cpos=(Window.width/2.0, Window.height/2.0), size=(Window.height/1.2, Window.height/1.2), source = "diamond.png"), color_map['d'])]
 
     def make_x(self, pos):
         return [(CRectangle(cpos=(Window.width/2.0, Window.height/2.0), size=(Window.height/1.2, Window.height/1.2), source = "cross.png"), color_map['x'])]
