@@ -47,9 +47,9 @@ color_map = {'c': magenta, 't': lime, 's': blue, 'd': cyan, 'x': purple}
 # return a Label object configured to look good and be positioned at
 # the top-left of the screen
 def topleft_label() :
-    l = Label(text = "text", valign='top', font_size='20sp',
+    l = Label(text = "text", valign='top', font_size='16sp',
               pos=(Window.width * 0.5, Window.height * 0.4),
-              text_size=(Window.width, Window.height))
+              text_size=(Window.width, Window.height-150))
     return l
 
 def pt_distance(p1, p2):

@@ -5,11 +5,7 @@ All the things for our 21M.385 final project.
 TODO: 
 
 -mark as wrong/make nodes disappear after one measure passes since last click
--put shapes in the center
--doing animations for pushing (getting rid of timers)
 -pulsing background
--add play screen
--add end screen of song
 
 
 How to play:
