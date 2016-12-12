@@ -7,6 +7,7 @@ from common.gfxutil import *
 
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.core.image import Image
+from trail import *
 
 circle_source = "circle_spell.png"
 
@@ -124,25 +125,44 @@ class SpellDisplay(InstructionGroup):
             self.add(line)
             self.spells.append(line)
 
-        shape_obj, color = self.shapes[shape](self.find_center(nodes))
-        spell = Spell(shape_obj, color)
-        self.add(spell)
-        self.spells.append(spell)
+        new_shapes = self.shapes[shape](self.find_center(nodes))
+        for s in new_shapes:
+            shape_obj = s[0]
+            color = s[1]
+            spell = Spell(shape_obj, color)
+            self.add(spell)
+            self.spells.append(spell)
 
     def make_circle(self, pos):
-        return (CRectangle(cpos=pos, size=(Window.height/4, Window.height/4), source = circle_source), color_map['c'])
+        shape1 = (CRectangle(cpos=(Window.width/2.0, Window.height/2.0), size=(Window.height/1.2, Window.height/1.2), source = "music_circle.png"), color_map['c'])
+        s = CRectangle(cpos=pos, size=(Window.height/2, Window.height/2), source = "node.png")
+        ms = MovingShape(s, pos, (Window.width/2, lanes_height), color = color_map['c']) #TODO doesn't move to center
+        shape2 = (ms, color_map['c'])
+        return [shape1, shape2]
 
     def make_square(self, pos):
-        return (CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['s'])
+        points = [(pos[0] + 100, pos[1] + 100), (pos[0]-100, pos[1] + 100), (pos[0] + 100, pos[1] - 100), (pos[0] - 100, pos[1] - 100)]
+        for p in points:
+            sparkle = MovingShape(CRectangle(cpos = pos, size = (30, 30), source = '../../snowflake.png'), pos, p, color = white_gold)
+            self.spells.append(sparkle)
+            self.add(sparkle)
+        #shape1 = (CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['s'])
+        shape2 = (CRectangle(cpos=(Window.width/2.0, Window.height/2.0), size=(Window.height/1.2, Window.height/1.2), source = "square.png"), color_map['s'])
+        return [shape2]
 
     def make_diamond(self, pos):
-        return (CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['d'])
+        points = [(pos[0] + 100, pos[1]), (pos[0]-100, pos[1]), (pos[0], pos[1] - 100), (pos[0], pos[1] + 100)]
+        for p in points:
+            sparkle = MovingShape(CRectangle(cpos = pos, size = (30, 30), source = '../../snowflake.png'), pos, p, color = white_gold)
+            self.spells.append(sparkle)
+            self.add(sparkle)
+        return [(CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['d'])]
 
     def make_x(self, pos):
-        return (CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['x'])
+        return [(CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['x'])]
 
     def make_triangle(self, pos):
-        return (CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['t'])
+        return [(CEllipse(cpos = pos, size = (60, 60), segments = 40), color_map['t'])]
 
     def on_update(self, dt):
         self.time += dt
@@ -202,6 +222,7 @@ class MovingShape(InstructionGroup):
     def on_update(self, dt):
         self.time += dt
         self.shape.cpos = (self.xanim.eval(self.time), self.yanim.eval(self.time))
+        print self.shape.cpos
         self.color.a = self.fade_anim.eval(self.time)        
         if self.time > self.duration:
             return False

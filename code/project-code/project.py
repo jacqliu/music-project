@@ -222,8 +222,11 @@ class MainWidget(BaseWidget) :
         if self.playing:
             self.player.on_button_up(pos)
         else:
-            lvl = self.level_select(touch.pos)
-            self.start_level(lvl[0], lvl[1], lvl[2])
+            try:
+                lvl = self.level_select(touch.pos)
+                self.start_level(lvl[0], lvl[1], lvl[2])
+            except:
+                pass
 
     #called by normal mouse and keyboard control
     def on_touch_down(self, touch):
@@ -238,8 +241,11 @@ class MainWidget(BaseWidget) :
         if self.playing:
             self.player.on_button_up(touch.pos)
         else:
-            lvl = self.level_select(touch.pos)
-            self.start_level(lvl[0], lvl[1], lvl[2])
+            try:
+                lvl = self.level_select(touch.pos)
+                self.start_level(lvl[0], lvl[1], lvl[2])
+            except:
+                pass
         
     def on_update(self):
         #getting data form psmove. Trigger presses and releases are events, otherwise vals will be [0, 0].
